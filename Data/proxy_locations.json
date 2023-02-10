@@ -1,7 +1,7 @@
 [
 	{
-	  "id": "",
-	  "time": "10",
+	  "id": "Random",
+	  "time": "",
 	  "host": "random-v2.proxyneldns.com",
 	  "port": "8809"
 	},
