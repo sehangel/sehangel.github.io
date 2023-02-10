@@ -1,26 +1,57 @@
 [
 	{
-		"id": "Random",
-		"time": "",
-		"host": "random-v2.proxyneldns.com",
-		"port": "8809"
+		"code": "Random",
+		"items": [
+			{
+				"host": "random-v2.proxyneldns.com",
+				"port": "8809",
+				"time": "10"
+			}
+		]
 	},
 	{
-		"id": "US",
-		"time": "14",
-		"host": "usa-v2.proxyneldns.com",
-		"port": "8809"
+		"code": "US",
+		"items": [
+			{
+				"host": "usa-v2.proxyneldns.com",
+				"port": "8809",
+				"time": "10"
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": ""
+			}
+		]
 	},
 	{
-		"id": "CA",
-		"time": "10",
-		"host": "ca-v2.proxyneldns.com",
-		"port": "8809"
+		"code": "UK",
+		"items": [
+			{
+				"host": "uk-v2.proxyneldns.com",
+				"port": "8809",
+				"time": "10"
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": ""
+			}
+		]
 	},
 	{
-		"id": "UK",
-		"time": "10",
-		"host": "uk-v2.proxyneldns.com",
-		"port": "8809"
+		"code": "CA",
+		"items": [
+			{
+				"host": "ca-v2.proxyneldns.com",
+				"port": "8809",
+				"time": "10"
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": ""
+			}
+		]
 	}
 ]
