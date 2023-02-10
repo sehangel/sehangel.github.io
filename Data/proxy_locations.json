@@ -3,15 +3,15 @@
 	  "host": "random-v2.proxyneldns.com",
 	  "port": 8809
 	},
-	"US": {
+	"United States": {
 		"host": "usa-v2.proxyneldns.com",
 		"port": 8809
 	  },
-	"GB": {
+	"United Kingdom": {
 	  "host": "uk-v2.proxyneldns.com",
 	  "port": 8809
 	},
-	"CA": {
+	"Canada": {
 	  "host": "ca-v2.proxyneldns.com",
 	  "port": 8809
 	}
