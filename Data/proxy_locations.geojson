@@ -1,24 +1,18 @@
 {
-	"countries": [
-	  {
-		"iso_code": "US",
-		"host": "www.example.com",
-		"port": 80
-	  },
-	  {
-		"iso_code": "GB",
-		"host": "www.example.co.uk",
-		"port": 8080
-	  },
-	  {
-		"iso_code": "FR",
-		"host": "www.example.fr",
-		"port": 9000
-	  },
-	  {
-		"iso_code": "DE",
-		"host": "www.example.de",
-		"port": 8000
-	  }
-	]
-}  
+	"US": {
+	  "host": "www.example.com",
+	  "port": 80
+	},
+	"GB": {
+	  "host": "www.example.co.uk",
+	  "port": 8080
+	},
+	"FR": {
+	  "host": "www.example.fr",
+	  "port": 9000
+	},
+	"DE": {
+	  "host": "www.example.de",
+	  "port": 8000
+	}
+  }
