@@ -1,0 +1,24 @@
+{
+    "countries": [
+      {
+        "iso_code": "US",
+        "host": "usa.proxneyldns.com",
+        "port": 80
+      },
+      {
+        "iso_code": "GB",
+        "host": "uk.proxneyldns.com",
+        "port": 8080
+      },
+      {
+        "iso_code": "FR",
+        "host": "fr.proxneyldns.com",
+        "port": 9000
+      },
+      {
+        "iso_code": "DE",
+        "host": "de.proxneyldns.com",
+        "port": 8000
+      }
+    ]
+}
