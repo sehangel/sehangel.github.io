@@ -1,18 +1,18 @@
 {
+	"Random": {
+	  "host": "random-v2.proxyneldns.com",
+	  "port": 8809
+	},
 	"US": {
-	  "host": "www.example.com",
-	  "port": 80
-	},
+		"host": "usa-v2.proxyneldns.com",
+		"port": 8809
+	  },
 	"GB": {
-	  "host": "www.example.co.uk",
-	  "port": 8080
+	  "host": "uk-v2.proxyneldns.com",
+	  "port": 8809
 	},
-	"FR": {
-	  "host": "www.example.fr",
-	  "port": 9000
-	},
-	"DE": {
-	  "host": "www.example.de",
-	  "port": 8000
+	"CA": {
+	  "host": "ca-v2.proxyneldns.com",
+	  "port": 8809
 	}
   }
