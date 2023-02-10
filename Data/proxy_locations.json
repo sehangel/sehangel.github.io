@@ -1,18 +1,26 @@
-{
-	"Random": {
+[
+	{
+	  "id": "",
+	  "time": "10",
 	  "host": "random-v2.proxyneldns.com",
-	  "port": 8809
+	  "port": "8809"
 	},
-	"United States": {
-		"host": "usa-v2.proxyneldns.com",
-		"port": 8809
-	  },
-	"United Kingdom": {
-	  "host": "uk-v2.proxyneldns.com",
-	  "port": 8809
-	},
-	"Canada": {
+	{
+	  "id": "CA",
+	  "time": "10",
 	  "host": "ca-v2.proxyneldns.com",
-	  "port": 8809
-	}
-  }
+	  "port": "8809"
+	},
+	{
+	  "id": "US",
+	  "time": "14",
+	  "host": "usa-v2.proxyneldns.com",
+	  "port": "8809"
+	},
+	{
+	  "id": "UK",
+	  "time": "10",
+	  "host": "uk-v2.proxyneldns.com",
+	  "port": "8809"
+	  }
+]
