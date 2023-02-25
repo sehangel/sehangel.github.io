@@ -53,20 +53,5 @@
 				"time": ""
 			}
 		]
-	},
-	{
-		"code": "AU",
-		"items": [
-			{
-				"host": "au.proxyneldns.com",
-				"port": "8809",
-				"time": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": ""
-			}
-		]
 	}
 ]
