@@ -15,7 +15,7 @@
 			{
 				"host": "usa-v2.proxyneldns.com",
 				"port": "8809",
-				"time": "15"
+				"time": "1"
 			},
 			{
 				"host": "",
@@ -30,7 +30,7 @@
 			{
 				"host": "uk-v2.proxyneldns.com",
 				"port": "8809",
-				"time": "10"
+				"time": "5"
 			},
 			{
 				"host": "",
@@ -45,7 +45,7 @@
 			{
 				"host": "ca-v2.proxyneldns.com",
 				"port": "8809",
-				"time": "20"
+				"time": "10"
 			},
 			{
 				"host": "",
