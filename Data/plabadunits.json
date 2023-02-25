@@ -1,40 +1,40 @@
 {
-    "app_id": "ca-app-pub-9898737532802790~9573723724",
-    "ad_units": [
-      {
-        "name": "Splash",
-        "id": "ca-app-pub-9898737532802790/6169186408",
-        "Ad format": "Interstitial"
-      },
-      {
-        "name": "Trash",
-        "id": "ca-app-pub-9898737532802790/8780514703",
-        "Ad format": "Interstitial"
-      },
-      {
-        "name": "Home",
-        "id": "ca-app-pub-9898737532802790/3603204174",
-        "Ad format": "Native advanced"
-      },
-      {
-        "name": "BackToForeground",
-        "id": "ca-app-pub-9898737532802790/4420958175",
-        "Ad format": "App open"
-      },
-      {
-        "name": "Exit",
-        "id": "ca-app-pub-9898737532802790/6202602184",
-        "Ad format": "Native advanced"
-      },
-      {
-        "name": "UnlockLocations",
-        "id": "ca-app-pub-9898737532802790/3757931089",
-        "Ad format": "Rewarded"
-      },
-      {
-        "name": "UnlockLocationsTwice",
-        "id": "ca-app-pub-9898737532802790/8497593031",
-        "Ad format": "Rewarded interstitial"
-      }
-    ]
-  }
+  "app_id": "ca-app-pub-9898737532802790~9573723724",
+  "ad_units": [
+    {
+      "name": "Splash",
+      "id": "ca-app-pub-9898737532802790/6169186408",
+      "Ad format": "Interstitial"
+    },
+    {
+      "name": "Trash",
+      "id": "ca-app-pub-9898737532802790/8780514703",
+      "Ad format": "Interstitial"
+    },
+    {
+      "name": "Home",
+      "id": "ca-app-pub-9898737532802790/3603204174",
+      "Ad format": "Native advanced"
+    },
+    {
+      "name": "BackToForeground",
+      "id": "ca-app-pub-9898737532802790/4420958175",
+      "Ad format": "App open"
+    },
+    {
+      "name": "Exit",
+      "id": "ca-app-pub-9898737532802790/6202602184",
+      "Ad format": "Native advanced"
+    },
+    {
+      "name": "UnlockLocations",
+      "id": "ca-app-pub-9898737532802790/3757931089",
+      "Ad format": "Rewarded"
+    },
+    {
+      "name": "UnlockLocationsTwice",
+      "id": "ca-app-pub-9898737532802790/8497593031",
+      "Ad format": "Rewarded interstitial"
+    }
+  ]
+}
