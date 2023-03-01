@@ -2,18 +2,22 @@
     "urls": [
         {
             "name": "Aliexpress",
+            "favicon_url": "https://aliexpress.com/",
             "url": "https://s.click.aliexpress.com/e/_Dl1gjSN"
         },
         {
             "name": "GitHub",
+            "favicon_url": "https://github.com",
             "url": "https://github.com"
         },
         {
             "name": "Stack Overflow",
+            "favicon_url": "https://stackoverflow.com",
             "url": "https://stackoverflow.com"
         },
         {
             "name": "Amazon",
+            "favicon_url": "https://www.amazon.com",
             "url": "https://www.amazon.com"
         }
     ]
