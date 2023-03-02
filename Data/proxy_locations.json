@@ -53,5 +53,50 @@
 				"time": ""
 			}
 		]
+	},
+	{
+		"code": "FR",
+		"items": [
+			{
+				"host": "fr.proxyneldns.com",
+				"port": "8809",
+				"time": "11"
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": ""
+			}
+		]
+	},
+	{
+		"code": "DE",
+		"items": [
+			{
+				"host": "de.proxyneldns.com",
+				"port": "8809",
+				"time": "18"
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": ""
+			}
+		]
+	},
+	{
+		"code": "SG",
+		"items": [
+			{
+				"host": "sg.proxyneldns.com",
+				"port": "8809",
+				"time": "10"
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": ""
+			}
+		]
 	}
 ]
