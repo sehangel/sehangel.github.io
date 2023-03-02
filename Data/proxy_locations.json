@@ -59,7 +59,7 @@
 		"items": [
 			{
 				"host": "fr.proxyneldns.com",
-				"port": "8809",
+				"port": "9330",
 				"time": "11"
 			},
 			{
@@ -74,7 +74,7 @@
 		"items": [
 			{
 				"host": "de.proxyneldns.com",
-				"port": "8809",
+				"port": "9310",
 				"time": "18"
 			},
 			{
@@ -89,7 +89,7 @@
 		"items": [
 			{
 				"host": "sg.proxyneldns.com",
-				"port": "8809",
+				"port": "9320",
 				"time": "10"
 			},
 			{
