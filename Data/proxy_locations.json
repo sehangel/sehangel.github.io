@@ -16,7 +16,7 @@
 			{
 				"host": "usa-v2.proxyneldns.com",
 				"port": "8809",
-				"time": "1",
+				"time": "",
 				"name": ""
 			},
 			{
@@ -33,7 +33,7 @@
 			{
 				"host": "uk-v2.proxyneldns.com",
 				"port": "8809",
-				"time": "5",
+				"time": "",
 				"name": ""
 			},
 			{
@@ -50,7 +50,7 @@
 			{
 				"host": "ca-v2.proxyneldns.com",
 				"port": "8809",
-				"time": "10",
+				"time": "",
 				"name": ""
 			},
 			{
@@ -67,7 +67,7 @@
 			{
 				"host": "fr.proxyneldns.com",
 				"port": "9330",
-				"time": "11",
+				"time": "",
 				"name": ""
 			},
 			{
@@ -84,7 +84,7 @@
 			{
 				"host": "de.proxyneldns.com",
 				"port": "9310",
-				"time": "18",
+				"time": "",
 				"name": ""
 			},
 			{
@@ -101,7 +101,7 @@
 			{
 				"host": "sg.proxyneldns.com",
 				"port": "9320",
-				"time": "10",
+				"time": "",
 				"name": ""
 			},
 			{
