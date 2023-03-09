@@ -51,6 +51,23 @@
                 "url": "https://www.nbcnews.com/"
             }
         ],
+        "fr_FR": [
+            {
+                "name": "New York Times",
+                "favicon_url": "https://www.nytimes.com/",
+                "url": "https://www.nytimes.com/"
+            },
+            {
+                "name": "Facebook",
+                "favicon_url": "https://www.facebook.com",
+                "url": "https://www.facebook.com"
+            },
+            {
+                "name": "NBC News",
+                "favicon_url": "https://www.nbcnews.com/",
+                "url": "https://www.nbcnews.com/"
+            }
+        ],
         "default": [
             {
                 "name": "Aliexpress",
