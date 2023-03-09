@@ -1,0 +1,77 @@
+{
+    "locales": {
+        "en-US": [
+            {
+                "name": "New York Times",
+                "favicon_url": "https://www.nytimes.com/",
+                "url": "https://www.nytimes.com/"
+            },
+            {
+                "name": "CNN",
+                "favicon_url": "https://www.cnn.com/",
+                "url": "https://www.cnn.com/"
+            },
+            {
+                "name": "NBC News",
+                "favicon_url": "https://www.nbcnews.com/",
+                "url": "https://www.nbcnews.com/"
+            }
+        ],
+        "ar-SA": [
+            {
+                "name": "New York Times",
+                "favicon_url": "https://www.nytimes.com/",
+                "url": "https://www.nytimes.com/"
+            },
+            {
+                "name": "CNN",
+                "favicon_url": "https://www.cnn.com/",
+                "url": "https://www.cnn.com/"
+            },
+            {
+                "name": "NBC News",
+                "favicon_url": "https://www.nbcnews.com/",
+                "url": "https://www.nbcnews.com/"
+            }
+        ],
+        "in_ID": [
+            {
+                "name": "New York Times",
+                "favicon_url": "https://www.nytimes.com/",
+                "url": "https://www.nytimes.com/"
+            },
+            {
+                "name": "CNN",
+                "favicon_url": "https://www.cnn.com/",
+                "url": "https://www.cnn.com/"
+            },
+            {
+                "name": "NBC News",
+                "favicon_url": "https://www.nbcnews.com/",
+                "url": "https://www.nbcnews.com/"
+            }
+        ],
+        "default": [
+            {
+                "name": "Aliexpress",
+                "favicon_url": "https://aliexpress.com/",
+                "url": "https://s.click.aliexpress.com/e/_Dl1gjSN"
+            },
+            {
+                "name": "Facebook",
+                "favicon_url": "https://www.facebook.com",
+                "url": "https://www.facebook.com"
+            },
+            {
+                "name": "Twitter",
+                "favicon_url": "https://twitter.com",
+                "url": "https://twitter.com"
+            },
+            {
+                "name": "Amazon",
+                "favicon_url": "https://www.amazon.com",
+                "url": "https://www.amazon.com"
+            }
+        ]
+    }
+}
