@@ -128,5 +128,22 @@
 				"name": ""
 			}
 		]
+	},
+	{
+		"code": "PL",
+		"items": [
+			{
+				"host": "pl.proxyneldns.com",
+				"port": "8750",
+				"time": "",
+				"name": ""
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": "",
+				"name": ""
+			}
+		]
 	}
 ]
