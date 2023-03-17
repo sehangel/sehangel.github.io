@@ -65,7 +65,7 @@
         ]
     },
     {
-        "locale": "in_ID",
+        "locale": "in-ID",
         "bookmarks": [
             {
                 "name": "New York Times",
@@ -85,7 +85,7 @@
         ]
     },
     {
-        "locale": "fr_FR",
+        "locale": "fr-FR",
         "bookmarks": [
             {
                 "name": "New York Times",
