@@ -5,7 +5,7 @@
             {
                 "name": "Aliexpress",
                 "favicon_url": "https://aliexpress.com/",
-                "url": "https://s.click.aliexpress.com/e/_Dl1gjSN"
+                "url": "https://s.click.aliexpress.com/e/_Dnp0YeD"
             },
             {
                 "name": "Facebook",
@@ -41,12 +41,22 @@
                 "name": "NBC News",
                 "favicon_url": "https://www.nbcnews.com/",
                 "url": "https://www.nbcnews.com/"
+            },
+            {
+                "name": "Aliexpress",
+                "favicon_url": "https://aliexpress.com/",
+                "url": "https://s.click.aliexpress.com/e/_Dnp0YeD"
             }
         ]
     },
     {
         "locale": "ar-SA",
         "bookmarks": [
+            {
+                "name": "Aliexpress",
+                "favicon_url": "https://aliexpress.com/",
+                "url": "https://s.click.aliexpress.com/e/_Dnp0YeD"
+            },
             {
                 "name": "New York Times",
                 "favicon_url": "https://www.nytimes.com/",
@@ -68,6 +78,11 @@
         "locale": "in-ID",
         "bookmarks": [
             {
+                "name": "Aliexpress",
+                "favicon_url": "https://aliexpress.com/",
+                "url": "https://s.click.aliexpress.com/e/_Dnp0YeD"
+            },
+            {
                 "name": "New York Times",
                 "favicon_url": "https://www.nytimes.com/",
                 "url": "https://www.nytimes.com/"
@@ -87,6 +102,11 @@
     {
         "locale": "fr-FR",
         "bookmarks": [
+            {
+                "name": "Aliexpress",
+                "favicon_url": "https://aliexpress.com/",
+                "url": "https://s.click.aliexpress.com/e/_Dnp0YeD"
+            },
             {
                 "name": "New York Times",
                 "favicon_url": "https://www.nytimes.com/",
