@@ -25,6 +25,31 @@
         ]
     },
     {
+        "locale": "ar",
+        "bookmarks": [
+            {
+                "name": "Aliexpress",
+                "favicon_url": "https://aliexpress.com/",
+                "url": "https://s.click.aliexpress.com/e/_Dnp0YeD"
+            },
+            {
+                "name": "Amazon",
+                "favicon_url": "https://www.amazon.sa/",
+                "url": "https://www.amazon.sa/b?_encoding=UTF8&tag=golzak0a-21&linkCode=ur2&linkId=99dbd1c12e3c207df15788d7c368c0e6&camp=247&creative=1211&node=12463162031"
+            },
+            {
+                "name": "YouTube",
+                "favicon_url": "https://www.youtube.com/",
+                "url": "https://www.youtube.com/"
+            },
+            {
+                "name": "NBC News",
+                "favicon_url": "https://www.nbcnews.com/",
+                "url": "https://www.nbcnews.com/"
+            }
+        ]
+    },
+    {
         "locale": "en-US",
         "bookmarks": [
             {
