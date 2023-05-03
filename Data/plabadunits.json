@@ -35,6 +35,11 @@
       "name": "UnlockLocationsTwice",
       "id": "ca-app-pub-9898737532802790/8497593031",
       "Ad format": "Rewarded interstitial"
+    },
+    {
+      "name": "Settings`",
+      "id": "ca-app-pub-9898737532802790/9225942037",
+      "Ad format": "Banner"
     }
   ]
 }
