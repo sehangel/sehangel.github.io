@@ -11,6 +11,23 @@
 		]
 	},
 	{
+		"code": "PL",
+		"items": [
+			{
+				"host": "pl.proxyneldns.com",
+				"port": "8750",
+				"time": "",
+				"name": ""
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": "",
+				"name": ""
+			}
+		]
+	},
+	{
 		"code": "US",
 		"items": [
 			{
@@ -119,23 +136,6 @@
 				"host": "au.proxyneldns.com",
 				"port": "8294",
 				"time": "15",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "PL",
-		"items": [
-			{
-				"host": "pl.proxyneldns.com",
-				"port": "8750",
-				"time": "",
 				"name": ""
 			},
 			{
