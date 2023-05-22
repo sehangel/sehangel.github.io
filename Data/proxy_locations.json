@@ -145,5 +145,39 @@
 				"name": ""
 			}
 		]
+	},
+	{
+		"code": "NL",
+		"items": [
+			{
+				"host": "nl.proxyneldns.com",
+				"port": "3839",
+				"time": "",
+				"name": ""
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": "",
+				"name": ""
+			}
+		]
+	},
+	{
+		"code": "IN",
+		"items": [
+			{
+				"host": "in.proxyneldns.com",
+				"port": "3847",
+				"time": "",
+				"name": ""
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": "",
+				"name": ""
+			}
+		]
 	}
 ]
