@@ -28,6 +28,23 @@
 		]
 	},
 	{
+		"code": "IT",
+		"items": [
+			{
+				"host": "it.proxyneldns.com",
+				"port": "8809",
+				"time": "",
+				"name": ""
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": "",
+				"name": ""
+			}
+		]
+	},
+	{
 		"code": "US",
 		"items": [
 			{
