@@ -45,10 +45,27 @@
 		]
 	},
 	{
+		"code": "US",
+		"items": [
+			{
+				"host": "usa.proxyneldns.com",
+				"port": "8809",
+				"time": "",
+				"name": ""
+			},
+			{
+				"host": "",
+				"port": "",
+				"time": "",
+				"name": ""
+			}
+		]
+	},
+	{
 		"code": "GB",
 		"items": [
 			{
-				"host": "uk-v2.proxyneldns.com",
+				"host": "uk.proxyneldns.com",
 				"port": "8809",
 				"time": "15",
 				"name": ""
@@ -65,7 +82,7 @@
 		"code": "CA",
 		"items": [
 			{
-				"host": "ca-v2.proxyneldns.com",
+				"host": "ca.proxyneldns.com",
 				"port": "8809",
 				"time": "15",
 				"name": ""
