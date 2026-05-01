@@ -1,200 +1,134 @@
 [
-	{
-		"code": "Random",
-		"items": [
-			{
-				"host": "random-v2.proxyneldns.com",
-				"port": "8809",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "PL",
-		"items": [
-			{
-				"host": "pl.proxyneldns.com",
-				"port": "8750",
-				"time": "",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "IT",
-		"items": [
-			{
-				"host": "it.proxyneldns.com",
-				"port": "8809",
-				"time": "",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "US",
-		"items": [
-			{
-				"host": "usa.proxyneldns.com",
-				"port": "8809",
-				"time": "",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "GB",
-		"items": [
-			{
-				"host": "uk.proxyneldns.com",
-				"port": "8809",
-				"time": "15",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "CA",
-		"items": [
-			{
-				"host": "ca.proxyneldns.com",
-				"port": "8809",
-				"time": "15",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "FR",
-		"items": [
-			{
-				"host": "fr.proxyneldns.com",
-				"port": "9330",
-				"time": "",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "DE",
-		"items": [
-			{
-				"host": "de.proxyneldns.com",
-				"port": "9310",
-				"time": "",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "SG",
-		"items": [
-			{
-				"host": "sg.proxyneldns.com",
-				"port": "9320",
-				"time": "15",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "AU",
-		"items": [
-			{
-				"host": "au.proxyneldns.com",
-				"port": "8294",
-				"time": "15",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "NL",
-		"items": [
-			{
-				"host": "nl.proxyneldns.com",
-				"port": "3839",
-				"time": "",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	},
-	{
-		"code": "IN",
-		"items": [
-			{
-				"host": "in.proxyneldns.com",
-				"port": "3847",
-				"time": "",
-				"name": ""
-			},
-			{
-				"host": "",
-				"port": "",
-				"time": "",
-				"name": ""
-			}
-		]
-	}
+  {
+    "code": "Random",
+    "items": [
+      {
+        "host": "random-v2.proxyneldns.com",
+        "port": "8809",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "AU",
+    "items": [
+      {
+        "host": "au.proxyneldns.com",
+        "port": "8294",
+        "time": "20",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "CA",
+    "items": [
+      {
+        "host": "ca.proxyneldns.com",
+        "port": "8809",
+        "time": "15",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "DE",
+    "items": [
+      {
+        "host": "de.proxyneldns.com",
+        "port": "9310",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "FR",
+    "items": [
+      {
+        "host": "fr.proxyneldns.com",
+        "port": "9330",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "GB",
+    "items": [
+      {
+        "host": "uk.proxyneldns.com",
+        "port": "8809",
+        "time": "15",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "IN",
+    "items": [
+      {
+        "host": "in.proxyneldns.com",
+        "port": "3847",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "IT",
+    "items": [
+      {
+        "host": "it.proxyneldns.com",
+        "port": "8809",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "NL",
+    "items": [
+      {
+        "host": "nl.proxyneldns.com",
+        "port": "3839",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "PL",
+    "items": [
+      {
+        "host": "pl.proxyneldns.com",
+        "port": "8750",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "SG",
+    "items": [
+      {
+        "host": "sg.proxyneldns.com",
+        "port": "9320",
+        "time": "15",
+        "name": ""
+      }
+    ]
+  },
+  {
+    "code": "US",
+    "items": [
+      {
+        "host": "usa.proxyneldns.com",
+        "port": "8809",
+        "time": "",
+        "name": ""
+      }
+    ]
+  }
 ]
