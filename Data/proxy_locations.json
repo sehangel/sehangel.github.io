@@ -60,7 +60,7 @@
       {
         "host": "uk.proxyneldns.com",
         "port": "8809",
-        "time": "15",
+        "time": "20",
         "name": ""
       }
     ]
@@ -104,7 +104,7 @@
       {
         "host": "pl.proxyneldns.com",
         "port": "8750",
-        "time": "",
+        "time": "20",
         "name": ""
       }
     ]
@@ -115,7 +115,7 @@
       {
         "host": "sg.proxyneldns.com",
         "port": "9320",
-        "time": "15",
+        "time": "20",
         "name": ""
       }
     ]
