@@ -55,17 +55,6 @@
     ]
   },
   {
-    "code": "GB",
-    "items": [
-      {
-        "host": "uk.proxyneldns.com",
-        "port": "8809",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
     "code": "IN",
     "items": [
       {
