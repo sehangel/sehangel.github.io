@@ -55,17 +55,6 @@
     ]
   },
   {
-    "code": "SG",
-    "items": [
-      {
-        "host": "sg.proxyneldns.com",
-        "port": "9320",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
     "code": "US",
     "items": [
       {
