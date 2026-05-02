@@ -22,17 +22,6 @@
     ]
   },
   {
-    "code": "CA",
-    "items": [
-      {
-        "host": "ca.proxyneldns.com",
-        "port": "8809",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
     "code": "DE",
     "items": [
       {
