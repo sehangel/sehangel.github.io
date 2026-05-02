@@ -3,7 +3,7 @@
     "code": "Random",
     "items": [
       {
-        "host": "random-v2.proxyneldns.com",
+        "host": "auto.proxyneldns.com",
         "port": "8809",
         "time": "",
         "name": ""
