@@ -11,6 +11,17 @@
     ]
   },
   {
+    "code": "FR",
+    "items": [
+      {
+        "host": "fr.proxyneldns.com",
+        "port": "9330",
+        "time": "",
+        "name": ""
+      }
+    ]
+  },
+  {
     "code": "IN",
     "items": [
       {
