@@ -55,17 +55,6 @@
     ]
   },
   {
-    "code": "NL",
-    "items": [
-      {
-        "host": "nl.proxyneldns.com",
-        "port": "3839",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
     "code": "PL",
     "items": [
       {
