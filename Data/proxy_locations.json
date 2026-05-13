@@ -44,17 +44,6 @@
     ]
   },
   {
-    "code": "IN",
-    "items": [
-      {
-        "host": "in.proxyneldns.com",
-        "port": "3847",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
     "code": "IT",
     "items": [
       {
