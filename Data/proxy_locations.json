@@ -11,17 +11,6 @@
     ]
   },
   {
-    "code": "CA",
-    "items": [
-      {
-        "host": "ca.proxyneldns.com",
-        "port": "9360",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
     "code": "FR",
     "items": [
       {
@@ -49,17 +38,6 @@
       {
         "host": "pl.proxyneldns.com",
         "port": "8750",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
-    "code": "US",
-    "items": [
-      {
-        "host": "usa.proxyneldns.com",
-        "port": "9350",
         "time": "20",
         "name": ""
       }
