@@ -22,17 +22,6 @@
     ]
   },
   {
-    "code": "DE",
-    "items": [
-      {
-        "host": "de.proxyneldns.com",
-        "port": "9310",
-        "time": "20",
-        "name": ""
-      }
-    ]
-  },
-  {
     "code": "FR",
     "items": [
       {
