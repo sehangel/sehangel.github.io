@@ -64,5 +64,16 @@
         "name": ""
       }
     ]
+  },
+  {
+    "code": "US",
+    "items": [
+      {
+        "host": "usa.proxyneldns.com",
+        "port": "9350",
+        "time": "20",
+        "name": ""
+      }
+    ]
   }
 ]
