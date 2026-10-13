@@ -46,11 +46,13 @@ The tracking rules never block the work itself:
 
 - No `gh` login in the session (e.g. a cloud sandbox): use the GitHub MCP or
   connector tools for the same operations.
-- No write access at all (a read-only automated review job, an offline
-  session): do the task, and list the issue updates you could not make (new
-  issues, label moves, comments) in the PR body or the final message, so the
-  next session with access applies them. Automated PR-review jobs only
-  review; they don't open or edit issues.
+- No write access, or not even read access to the issue list (a read-only
+  automated review or `@claude` job, an offline session): do the task, skip
+  the steps you can't run (the session-start and end-of-turn sweeps
+  included), and list the issue updates you could not make (new issues,
+  label moves, comments) in the PR body or the final message, so the next
+  session with access applies them. Automated PR-review jobs only review;
+  they don't open or edit issues.
 
 ## Labels
 
@@ -82,12 +84,13 @@ one-label rule applies only to `status:*` and `priority:*`. If a label is
 missing, create it: `gh label create "<label>" -R $R --force` (the sync
 script creates the standard set in every repo).
 
-Moving an issue means removing whatever stage (or priority) label it has now,
-not the one you expect it to have:
+Moving an issue means removing whatever label of that family (stage or
+priority) it has now, not the one you expect it to have:
 
 ```bash
-n=18; new=status:in-progress
-for l in $(gh issue view $n -R $R --json labels --jq '.labels[].name | select(startswith("status:"))'); do
+n=18; new=status:in-progress            # or priority:P1
+prefix="${new%%:*}:"                     # status: or priority:
+for l in $(gh issue view $n -R $R --json labels --jq ".labels[].name | select(startswith(\"$prefix\"))"); do
   gh issue edit $n -R $R --remove-label "$l"
 done
 gh issue edit $n -R $R --add-label "$new"
@@ -151,9 +154,11 @@ Pick work in this order, and say the order when reporting:
 ## Shared resources (one owner at a time)
 
 Production services, deploy pipelines, test devices and store consoles are
-shared. The profile lists them. Record the current owner on the issue that
-uses one, hand over explicitly ("device yours" / "device free"), and never
-act on a resource someone else holds without a hand-off. P0 work may preempt,
+shared. The profile lists them. Each shared resource has one place where its owner is
+recorded (the profile names it: a pinned issue per device or service, or the
+coordinator); claim it there, re-read it, and hand over explicitly ("device
+yours" / "device free"). Never act on a resource someone else holds without a
+hand-off. P0 work may preempt,
 after a message to the owner.
 
 ## Loop
@@ -206,6 +211,9 @@ after a message to the owner.
      ```
 
      The list must contain every `Closes` issue, with the right repository.
+     A PR into a non-default branch has no closing links at all (GitHub
+     ignores the keywords there), so skip this check for it and close its
+     issues by hand after the merge.
      `Refs` lines don't show up there, so also read them from the body:
      `gh pr view $PR -R $R --json body --jq .body | grep -oiE 'refs [a-z0-9/._-]*#[0-9]+'`.
      When you rewrite a PR body from a file, keep these lines.
@@ -287,7 +295,8 @@ repositories at once.
 - **One owner per issue and PR.** The coordinator assigns issues before it
   dispatches agents. An agent that picks up an issue on its own comments
   "Owner: <agent>, worktree <path>", then re-reads the comments: if another
-  "Owner:" comment came first, the earlier one wins and it backs off. When an
+  "Owner:" comment came first after the latest "Released:" comment, that
+  earlier claim wins and it backs off. When an
   owner stops or is stopped, it comments "Released: <state>": what's
   mid-flight, prod changes not yet restored, a device it holds. Never put two
   agents on one issue.
