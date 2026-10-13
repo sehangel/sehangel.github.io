@@ -3,7 +3,10 @@ name: issues-as-memory
 description: Turn every operator request into a GitHub issue and track it on a Kanban (status:* + priority:P0-P3 labels, ordered by priority and dependencies) so work survives agent context loss. Use at the start of every session, after every context summary, when starting/finishing/blocking any task, when opening a PR, and before ending a turn. Triggers -- what's left, what's next, backlog, kanban, update the ticket, log this, track this, resume work.
 ---
 
-<!-- synced from sehangel/claude-skills -- edit there (issues-as-memory/SKILL.md), not here: the next sync overwrites this copy. -->
+<!--
+  synced from sehangel/claude-skills -- edit there
+  (issues-as-memory/SKILL.md), not here: the next sync overwrites this copy.
+-->
 
 # GitHub Issues are the memory
 
