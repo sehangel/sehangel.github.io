@@ -1,6 +1,6 @@
 ---
 name: issues-as-memory
-description: Turn every operator message into a GitHub issue and track it on a Kanban (status:* + priority:P0-P3 labels, ordered by priority and dependencies) so work survives agent context loss. Use at the start of every session, after every context summary, when starting/finishing/blocking any task, when opening a PR, and before ending a turn. Triggers -- what's left, what's next, backlog, kanban, update the ticket, log this, track this, resume work.
+description: Turn every operator request into a GitHub issue and track it on a Kanban (status:* + priority:P0-P3 labels, ordered by priority and dependencies) so work survives agent context loss. Use at the start of every session, after every context summary, when starting/finishing/blocking any task, when opening a PR, and before ending a turn. Triggers -- what's left, what's next, backlog, kanban, update the ticket, log this, track this, resume work.
 ---
 
 <!-- synced from sehangel/claude-skills -- edit there (issues-as-memory/SKILL.md), not here: the next sync overwrites this copy. -->
@@ -25,8 +25,10 @@ repository root. Read it before using this skill. It says:
 - deploy and verification rules, and the repo's lessons learned;
 - stricter rules (a Kanban SOP, a triage runbook) that override this skill.
 
-A repository may make these rules stricter, never looser. If the profile is
-missing, use this skill as written and open an issue to add the profile.
+A repository may make these rules stricter, never looser. A profile adds to
+the definitions here (e.g. more P0 conditions); it never narrows them. If the
+profile is missing, use this skill as written and open an issue to add the
+profile.
 
 If the repository has its own `.claude/skills/issues-as-memory/SKILL.md`
 without the "synced from sehangel/claude-skills" header, that is an older
@@ -38,52 +40,87 @@ Set the repository once per session and use it in every command:
 R=$(gh repo view --json nameWithOwner --jq .nameWithOwner)   # e.g. sehangel/ci-burst
 ```
 
+### When GitHub is out of reach
+
+The tracking rules never block the work itself:
+
+- No `gh` login in the session (e.g. a cloud sandbox): use the GitHub MCP or
+  connector tools for the same operations.
+- No write access at all (a read-only automated review job, an offline
+  session): do the task, and list the issue updates you could not make (new
+  issues, label moves, comments) in the PR body or the final message, so the
+  next session with access applies them. Automated PR-review jobs only
+  review; they don't open or edit issues.
+
 ## Labels
 
 Exactly one stage label per open issue:
 
-| Label | Meaning |
-| --- | --- |
-| `status:backlog` | Known, not prioritized |
-| `status:todo` | Prioritized, ready to start |
-| `status:in-progress` | Someone is working on it now |
-| `status:review` | PR open, waiting on review/CI |
-| `status:qa` | Merged or deployed; needs a live, device or production check (usually the follow-up issue; the profile says what the check is) |
-| `status:done` | Verified; close the issue with evidence |
-| `blocked` | Add alongside a stage label; say why and who unblocks |
+| Label                | Meaning                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------- |
+| `status:backlog`     | Known, not prioritized                                                                            |
+| `status:todo`        | Prioritized, ready to start                                                                       |
+| `status:in-progress` | Someone is working on it now                                                                      |
+| `status:review`      | PR open, waiting on review/CI                                                                     |
+| `status:qa`          | Merged or deployed; needs a live, device or production check (the profile says what the check is) |
+| `status:done`        | Verified; close the issue with evidence                                                           |
+| `blocked`            | Add alongside a stage label; say why and who unblocks                                             |
 
 Exactly one priority label per open issue:
 
-| Label | Meaning | Rule |
-| --- | --- | --- |
-| `priority:P0` | Urgent: production broken, users blocked, runaway spend, security or data risk (the profile may sharpen this) | Drop everything. Pull the agent from lower work, fix, verify, close; then resume the pipeline |
-| `priority:P1` | Release-blocking or next up | Work before any P2/P3 |
-| `priority:P2` | Normal planned work | Default for new tasks |
-| `priority:P3` | Backlog / nice to have | Only when nothing P0-P2 is actionable |
+| Label         | Meaning                                                                                                   | Rule                                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `priority:P0` | Urgent: production broken, users blocked, runaway spend, security or data risk (the profile may add more) | Drop everything. Pull the agent from lower work, fix, verify, close; then resume the pipeline |
+| `priority:P1` | Release-blocking or next up                                                                               | Work before any P2/P3                                                                         |
+| `priority:P2` | Normal planned work                                                                                       | Default for new tasks                                                                         |
+| `priority:P3` | Backlog / nice to have                                                                                    | Only when nothing P0-P2 is actionable                                                         |
 
 Also `bug` for defects. Initiatives use a checklist of child issues (the
-`epic` label where the repo has it). If a label is missing, create it:
-`gh label create "status:todo" -R $R --force` (the sync script creates the
-standard set in every repo).
+`epic` label where the repo has it). Keep other classification labels the
+repo uses (areas, `documentation`, `enhancement`, provenance); the
+one-label rule applies only to `status:*` and `priority:*`. If a label is
+missing, create it: `gh label create "<label>" -R $R --force` (the sync
+script creates the standard set in every repo).
 
-## Every operator message is a task (hard rule)
+Moving an issue means removing whatever stage (or priority) label it has now,
+not the one you expect it to have:
 
-Everything the operator says in a session is a task or a decision. Capture it
-on GitHub before (or while) acting, never only in chat:
+```bash
+n=18; new=status:in-progress
+for l in $(gh issue view $n -R $R --json labels --jq '.labels[].name | select(startswith("status:"))'); do
+  gh issue edit $n -R $R --remove-label "$l"
+done
+gh issue edit $n -R $R --add-label "$new"
+```
 
-- **Request** ("fix X", "add Y", "switch Z") -> search for an existing issue;
-  update it or open a new one with a `status:*` and a `priority:*` label (plus
-  any label the profile requires) in the same turn. Small requests finished
-  in the same turn still get an issue (or a comment on the matching one) with
-  the evidence.
+Move the stage label only when the issue crosses a stage boundary (started,
+PR opened, merged, verified), not after every commit. When `blocked` no longer
+applies, remove it. A reopened issue loses `status:done` and gets the stage
+that matches its remaining work.
+
+## Every operator request is a task (hard rule)
+
+Everything the operator asks for or decides in a session is captured on
+GitHub before (or while) acting, never only in chat:
+
+- **Request** ("fix X", "add Y", "switch Z") -> search for an existing issue
+  (`gh issue list -R $R --search "<words>" --state all --limit 200`); update
+  it, reopening it if it was closed but the work is not done, or open a new
+  one with a `status:*` and a `priority:*` label (plus any label the profile
+  requires) in the same turn. Small requests finished in the same turn still
+  get an issue (or a comment on the matching one) with the evidence.
 - **Bug report** (even a vague one: "it freezes", "the button does nothing")
   -> `bug` issue with what the operator saw, then the evidence you collect
   (logs, screenshots, queries). Production-impacting or launch-blocking bugs
   are P0/P1.
 - **Decision** ("ship to beta only", "use provider X", "don't mention Y") ->
   comment on every issue it affects, and update the issue title or checklist
-  if the scope changed. Durable decisions also go in agent memory.
-- **Question** -> answer it; if the answer exposes work, open an issue.
+  if the scope changed. A durable decision also goes where future sessions
+  read it: the profile or the repo playbook the profile names, and agent
+  memory where the session has it.
+- **Question** -> answer it. If it is about an issue, add the question and
+  answer there; if the answer exposes work, open an issue. A pure question
+  with no issue and no work needs no new issue.
 - **Operator-owned steps**: only what needs the operator's own login,
   identity or money, such as a dashboard or store click with no API or CLI we
   hold credentials for, a sign-in, a value only they hold, or new spend.
@@ -99,14 +136,16 @@ Pick work in this order, and say the order when reporting:
 1. Any `priority:P0`, even if it means pausing an in-flight agent or other
    work (or taking back a shared device). Announce the interrupt on the
    paused issue.
-2. `status:in-progress` before starting new work (limit WIP: finish or hand
-   off before starting more than one task per worker or device).
-3. `priority:P1`, then P2, then P3, within each `status:todo` before
+2. A ready `priority:P1` before in-progress P2/P3 work: pause the lower one
+   with a comment saying where it stands.
+3. Otherwise `status:in-progress` before starting new work (limit WIP: finish
+   or hand off before starting more than one task per worker or device).
+4. `priority:P1`, then P2, then P3, within each `status:todo` before
    `status:backlog`.
-4. Respect dependencies: write `Blocked by #n` / `Depends on #n` in the body;
+5. Respect dependencies: write `Blocked by #n` / `Depends on #n` in the body;
    don't start a task whose dependency is open unless the work is independent.
    Example sequence: fix -> merge -> deploy -> live or device check -> close.
-5. Re-prioritise when the operator changes goals (e.g. "release only to beta"):
+6. Re-prioritise when the operator changes goals (e.g. "release only to beta"):
    relabel affected issues in the same turn.
 
 ## Shared resources (one owner at a time)
@@ -119,29 +158,36 @@ after a message to the owner.
 
 ## Loop
 
-1. **Start of session / after a summary**: `gh issue list -R $R --state open --limit 100`
+1. **Start of session / after a summary**: `gh issue list -R $R --state open --limit 1000`
    and read the epics or initiatives. Pick the next `status:in-progress` or
    `status:todo` item. Never start from memory alone.
-2. **Before working**: search first (`gh issue list -R $R --search "<words>" --state all`).
+2. **Before working**: search first (`gh issue list -R $R --search "<words>" --state all --limit 200`).
    If no issue covers the task, open one. Move it to `status:in-progress`.
 3. **While working**: at every meaningful step (built, tested, deployed, found a
    blocker) add a comment: what changed, evidence (command + result,
    commit SHA, URL), and what is next. This is what a future agent will read.
 4. **New work discovered**: open a new issue immediately (follow-ups, bugs,
    decisions the operator owes). Link it from the epic checklist.
-5. **PR**: one branch per task in its own worktree. Move the issues the
-   PR delivers (`Closes`) to `status:review`; issues it only references
-   (`Refs`) keep the status that matches their remaining work. The PR
-   body references **every** issue the PR handles or touches, one keyword
-   per line, so nothing is left open by accident:
+5. **PR**: one branch per task in its own worktree (unless the repo's rules
+   allow direct commits). Move the issues the PR delivers (`Closes`) to
+   `status:review`; issues it only references (`Refs`) keep the status that
+   matches their remaining work. The PR body references **every** issue the
+   PR handles or touches, one keyword per line, so nothing is left open by
+   accident:
    - `Closes #n` (the default) for each issue the PR delivers. GitHub
-     closes it when the PR merges to the default branch.
-   - Still needs a live, device or production check after merge? Close the
-     issue anyway, and put the remaining check on a follow-up issue that
-     the PR body links with `Refs #m`.
+     closes it only when the PR merges into the **default branch**; a PR
+     into another branch (a release branch) needs the issues closed by hand
+     after the merge.
+   - Still needs a live, device or production check after merge? By default,
+     close the issue anyway and put the remaining check on a follow-up issue
+     that the PR body links with `Refs #m`. Where the profile or a repo rule
+     keeps the delivered issue open until it is verified (e.g. a crash fix
+     that must be confirmed in the field), link it with `Refs #n` instead,
+     move it to `status:qa` after the merge, and close it by hand with the
+     proof.
      If other issues say `Blocked by #n` or `Depends on #n` because of that
-     check, point them at the follow-up issue first, so closing `#n` doesn't
-     unblock them early.
+     check, point them at the issue that carries the check, so closing `#n`
+     doesn't unblock them early.
    - `Refs #n` only for issues the PR advances but cannot finish, because
      the rest is an operator or external action (a dashboard click, a store
      approval, a later PR). Say in the issue what remains.
@@ -155,17 +201,18 @@ after a message to the owner.
 
      ```bash
      PR=$(gh pr view --json number --jq .number)  # PR of the current branch
-     gh api graphql -F owner=${R%/*} -F name=${R#*/} -F pr=$PR -f query='query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){closingIssuesReferences(first:100){nodes{number}}}}}' \
-       --jq '[.data.repository.pullRequest.closingIssuesReferences.nodes[].number]'
+     gh api graphql -F owner=${R%/*} -F name=${R#*/} -F pr=$PR -f query='query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){closingIssuesReferences(first:100){nodes{number repository{nameWithOwner}}}}}}' \
+       --jq '[.data.repository.pullRequest.closingIssuesReferences.nodes[] | "\(.repository.nameWithOwner)#\(.number)"]'
      ```
 
-     The list must contain every `Closes` issue. `Refs` lines don't show
-     up there, so also read them from the body:
+     The list must contain every `Closes` issue, with the right repository.
+     `Refs` lines don't show up there, so also read them from the body:
      `gh pr view $PR -R $R --json body --jq .body | grep -oiE 'refs [a-z0-9/._-]*#[0-9]+'`.
      When you rewrite a PR body from a file, keep these lines.
+
 6. **After merge / deploy**: confirm the `Closes` issues closed and move
    them from `status:review` to `status:done` (GitHub doesn't change labels).
-   Move verification follow-ups to `status:qa` until verified, then
+   Move issues that wait on verification to `status:qa` until verified, then
    `status:done` and close with the evidence. Other `Refs` issues keep a
    stage label that matches what remains (e.g. `status:todo`), plus `blocked`
    when waiting on the operator or an external party, with a comment saying
@@ -182,11 +229,13 @@ Context can be lost at any moment, so progress lives in issues, not in the chat:
   review, a decision from the operator) -- stop and update the issue(s) it
   touched before starting the next thing: a comment with what changed,
   evidence (commit SHA / deploy version / test result / URL) and what is next;
-  move the `status:*` label; tick the epic checklist.
+  move the `status:*` label if the issue crossed a stage boundary; tick the
+  epic checklist.
 - **Every 10 minutes during long sessions** -- a session reminder (`/loop 10m`
-  or a session cron) prompts a checkpoint sweep: list issues touched since the
-  last checkpoint (`gh issue list -R $R --label status:in-progress`), make
-  sure each has a current comment and label, open issues for any new work or
+  or a session cron) prompts a checkpoint sweep: go through the issues you
+  touched since the last checkpoint (keep their numbers in your notes; this
+  repo's `status:in-progress` list helps but is not enough), make sure each
+  has a current comment and label, and open issues for any new work or
   operator request not yet tracked.
 - **When delegating to subagents** -- tell them which issue to comment on, and
   after they report, record their result on the issue yourself.
@@ -198,23 +247,30 @@ Context can be lost at any moment, so progress lives in issues, not in the chat:
 Finishing the task in front of you is not the end of the turn. The operator
 expects the board to keep moving without having to say "keep working":
 
-- **Never end a turn while an actionable issue is open.** Before stopping, run
-  `gh issue list -R $R --state open --limit 100` and walk every issue that is
-  not `blocked` and not waiting on the operator. For each one: work it now,
-  delegate it to a background agent (own worktree), or record on the issue why
-  it cannot move (with `blocked` + who unblocks it).
+- **Never end a turn while authorized, actionable work is open.** Before
+  stopping, run `gh issue list -R $R --state open --limit 1000` (check that
+  the count is below the limit) and walk every issue that is not `blocked`
+  and not waiting on the operator. For each one in scope (see below): work it
+  now, delegate it to a background agent (own worktree), or record on the
+  issue why it cannot move (with `blocked` + who unblocks it).
+- **In scope** means: the session's request, issues you or the session own,
+  and the queue the operator has authorized (standing instructions or the
+  profile). An open issue on its own is not permission to start
+  production-affecting or unrelated work: record it, and ask. `status:backlog`
+  items the operator deferred stay deferred.
 - **A finished task triggers the next one.** After each checkpoint, pick the
-  next `status:in-progress`, then `status:todo`, then `status:backlog` item
-  and start it in the same turn.
+  next in-scope `status:in-progress`, then `status:todo`, then
+  `status:backlog` item and start it in the same turn.
 - **Waiting is not a reason to stop.** While a release, CI run or subagent is
-  running, work another issue in parallel. Only stop when every open issue is
-  done, `status:review`/`status:qa` with its PR or check in flight, or blocked
-  on the operator/an external party, and say which ones in the final message.
+  running, work another issue in parallel. Only stop when every in-scope
+  issue is closed (done ones closed with their evidence),
+  `status:review`/`status:qa` with its PR or check in flight, or blocked on
+  the operator/an external party, and say which ones in the final message.
 - **Self-reminder loop.** At the start of a long session, schedule a recurring
   work sweep (session cron every 10 min, off the :00/:30 marks, or
   `/loop 10m`) whose prompt is: "Sweep <owner/repo> open issues: checkpoint
-  touched ones, then pick up any unblocked issue nobody is working on and
-  continue it." The sweep both checkpoints and resumes work; a plain
+  touched ones, then pick up any unblocked in-scope issue nobody is working
+  on and continue it." The sweep both checkpoints and resumes work; a plain
   "checkpoint" reminder is not enough.
 - **"Continue" / "keep working" from the operator** means: re-read every open
   issue and work all actionable ones, not only the last task discussed.
@@ -228,10 +284,12 @@ repositories at once.
 
 ### Many agents at once
 
-- **One owner per issue and PR.** The agent that starts an issue comments
-  "Owner: <agent>, worktree <path>". When it stops or is stopped, it comments
-  "Released: <state>": what's mid-flight, prod changes not yet restored, a
-  device it holds. Check the owner before assigning work; never put two
+- **One owner per issue and PR.** The coordinator assigns issues before it
+  dispatches agents. An agent that picks up an issue on its own comments
+  "Owner: <agent>, worktree <path>", then re-reads the comments: if another
+  "Owner:" comment came first, the earlier one wins and it backs off. When an
+  owner stops or is stopped, it comments "Released: <state>": what's
+  mid-flight, prod changes not yet restored, a device it holds. Never put two
   agents on one issue.
 - **Taking over from a stale owner:** if an owner has posted nothing for
   2 hours and is no longer running (the coordinator checks its agent list),
@@ -247,11 +305,19 @@ repositories at once.
      checking the builds still in progress, not only what is already
      serving traffic (the profile says where to look).
   4. The holder merges, runs its post-deploy watch, and releases the slot
-     back to the coordinator.
+     back to the coordinator, also when the deploy failed.
 
-  Without a coordinator, use a single pinned "deploy slot" issue: assign it
-  to yourself, then re-read it before merging, and if someone else holds it,
-  wait.
+  The slot is not permission to merge: merge only where the operator has
+  authorized it (the profile says when agents may merge, e.g. never into a
+  release branch without the operator's OK for that PR).
+
+  Without a coordinator, use one pinned "deploy slot" issue as a queue.
+  Comment "Deploy slot: claimed by <agent>", then re-read the comments: the
+  oldest claim after the last "Deploy slot: released" comment holds the slot;
+  everyone else waits. The holder comments "Deploy slot: released" after its
+  watch, or on failure. If the repo can run deploys in a CI job, a
+  `concurrency` group is the stronger lock.
+
 - **Agents share one scratch folder:** give your helper scripts and outputs
   unique names (prefix them with your agent name). One agent overwrote
   another's watch script, and a deploy watch read the wrong output.
@@ -277,10 +343,12 @@ repositories at once.
   with their accounts, their saved credentials), money (new spend, paid
   services), legal or counsel calls, and values only they hold (a third-party
   key they signed up for).
+
 - **Production-wide changes still need the operator's per-change approval**:
   flags every user sees, live capacity limits, opening or closing a region,
-  draining servers. The profile or a test skill may list more. An approval
-  covers only the change it was given for; record it on the issue.
+  draining servers. The profile or a test skill may list more, and may name
+  automations the operator approved in advance. An approval covers only the
+  change it was given for; record it on the issue.
 - **Decisions:** ask with concrete options and a recommendation. Record the
   answer on the issue at once. If the operator reverses it, record the
   correction on the same issue.
@@ -294,11 +362,12 @@ repositories at once.
 ### Evidence, QA and production tests
 
 - **Device or visual checks: no screenshot means no proof.** The proof (or a
-  small GIF) is embedded in the comment that ticks the checklist item.
-- **A fix needing live or device proof** follows the PR rule above: close
-  the delivered issue, and put the live or device check on a `status:qa`
-  follow-up issue linked with `Refs` (the QA queue issue, where the repo has
-  one). Tick and close the follow-up only with a link to the proof.
+  small GIF) is embedded in the comment that ticks the checklist item. Crop
+  or blur personal data, tokens and account details first.
+- **A fix needing live or device proof** follows the PR rule above: the
+  check lives on a `status:qa` issue (the follow-up, the QA queue issue where
+  the repo has one, or the delivered issue itself where the profile says so).
+  Tick and close it only with a link to the proof.
 - **Every prod config change made for a test:** record the state before,
   restore it after, read it back, and note all of it on the issue.
 - **Measure, then label:** a QA failure becomes its own `bug` issue with
@@ -306,7 +375,7 @@ repositories at once.
   area.
 - **Unit tests are not proof of a live fix.** Changes that touch startup,
   connect, auth, deploys or infrastructure get a live or device check before
-  their follow-up is `status:done`.
+  their QA issue is `status:done`.
 
 ### Incidents
 
@@ -324,13 +393,14 @@ repositories at once.
 - **Parent and children:** a parent issue in the product repo, and a child
   issue in each repo it touches, linked both ways.
 - **Missing labels:** create any the target repo lacks before labelling,
-  naming the repo: `gh label create "status:todo" -R <owner>/<child-repo>
-  --force`.
+  naming the repo: `gh label create "<label>" -R <owner>/<child-repo>
+--force`.
 - **Cross-repo references** use the full form, `owner/repo#n`, in issue
   bodies, PR bodies and comments. A bare `#n` links to an unrelated issue in
   the current repo.
 - **Local checkouts of other repos go stale.** Read other repos' files with
-  `gh api repos/<owner>/<repo>/contents/<path> -H "Accept: application/vnd.github.raw"`.
+  `gh api "repos/<owner>/<repo>/contents/<path>?ref=<branch-or-sha>" -H "Accept: application/vnd.github.raw"`;
+  without `ref` you get the default branch, not an in-flight PR's version.
 
 ### Backlog hygiene
 
@@ -340,27 +410,27 @@ repositories at once.
     that ended it;
   - merge duplicates;
   - fix label drift: every open issue has exactly one `status:*` and one
-    `priority:*` label.
+    `priority:*` label, and issues filed by automations (templates, alert
+    bots) get theirs too.
 - **Postponed features** keep their design (prototype links, the agreed
   approach) in a `status:backlog` issue, so picking them up later redoes
   nothing.
 
 ## Comment style
 
-GitHub timestamps every comment and label change, so never write dates or
-times in comments (no date prefixes). Start with the substance:
-what changed, evidence, what's next. Dates belong only in content that
-lives outside GitHub (docs, memory) or when quoting an external timestamp
-(e.g. a log line).
+GitHub timestamps every comment and label change, so don't start comments
+with the date or time of writing. Start with the substance: what changed,
+evidence, what's next. Dates that are evidence belong in the text: event
+times in an incident timeline, a deadline and its source, a historical
+start or finish date, an external timestamp (a log line), and any dated
+header a repo workflow requires.
 
 ## Commands
 
 ```bash
 R=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh issue create -R $R --title "..." --label "status:todo,priority:P2" --body "..."
-gh issue list -R $R --state open --label priority:P0          # anything urgent?
-gh issue edit 18 -R $R --remove-label priority:P2 --add-label priority:P1
-gh issue edit 18 -R $R --remove-label status:todo --add-label status:in-progress
+gh issue list -R $R --state open --label priority:P0 --limit 1000   # anything urgent?
 gh issue comment 18 -R $R --body "Deployed abc123; /healthz 200. Next: ..."
 gh issue close 18 -R $R --reason completed --comment "Verified: ..."
 gh issue close 18 -R $R --reason "not planned" --comment "Why: ..."
@@ -369,6 +439,11 @@ gh issue list -R $R --state open --limit 1000 --json number,labels --jq \
   '.[] | select(([.labels[].name | select(startswith("status:"))] | length) != 1
             or ([.labels[].name | select(startswith("priority:"))] | length) != 1) | .number'
 ```
+
+(Stage and priority moves: see "Labels" above.) If `gh issue edit` fails
+with a "Projects (classic)" GraphQL error (older `gh`), use the REST API:
+`gh api -X POST repos/$R/issues/18/labels -f 'labels[]=status:todo'` and
+`gh api -X DELETE repos/$R/issues/18/labels/status:backlog`.
 
 Never put secrets, tokens or user personal data in an issue. In a public
 repository, also keep internal design, infrastructure details and client

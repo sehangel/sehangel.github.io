@@ -10,7 +10,9 @@ lessons here, not in the synced skill.
 
 - Standard set only: `status:backlog|todo|in-progress|review|qa|done`,
   `blocked`, `priority:P0`-`P3`, plus `bug`.
-- `priority:P0` here: production broken, users blocked, security or data risk.
+- `priority:P0` here: the skill's list (production broken, users blocked,
+  runaway spend, security or data risk); add repo-specific conditions here,
+  never remove one.
 - `status:qa` here: merged or deployed, waiting on a live check.
 - Legacy labels: none.
 
