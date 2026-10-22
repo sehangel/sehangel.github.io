@@ -262,8 +262,8 @@ expects the board to keep moving without having to say "keep working":
   stopping, run `gh issue list -R $R --state open --limit 1000` (check that
   the count is below the limit) and walk every issue that is not `blocked`
   and not waiting on the operator. For each one in scope (see below): work it
-  now, delegate it to a background agent (own worktree), or record on the
-  issue why it cannot move (with `blocked` + who unblocks it).
+  now yourself, or record on the issue why it cannot move (with `blocked` +
+  who unblocks it). Don't spawn sub-agents just to clear the board.
 - **In scope** means: the session's request, issues you or the session own,
   and the queue the operator has authorized (standing instructions or the
   profile). An open issue on its own is not permission to start
