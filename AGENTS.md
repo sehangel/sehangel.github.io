@@ -12,11 +12,20 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
 - Every operator request, bug report or decision is captured as an issue (or
   a comment on the matching one) in the same turn.
 - Every open issue has exactly one `status:*` label (`backlog`, `todo`,
-  `in-progress`, `review`, `qa`, `done`; plus `blocked` with who unblocks it)
-  and exactly one `priority:P0`-`P3` label. Work is picked P0 first.
+  `in-progress`, `review`, `qa`, `done`, and any stage the profile adds;
+  plus `blocked` with who unblocks it) and exactly one `priority:P0`-`P3`
+  label. Work is picked P0 first.
+- Closing an issue moves its label too (GitHub never does): completed work
+  ends on `status:done` (or the profile's next stage), checked right after
+  every merge.
 - PRs reference every issue they handle: `Closes #n` for each issue they
   deliver, `Refs #n` for epics and for work an operator or a later PR
   finishes. Other repos' issues use the full `owner/repo#n` form.
+- Every issue is complete on its own: a Status block at the top of its body
+  (stage, owner, next step, what is done, what was decided and why),
+  rewritten at each step, and a comment feed of decisions with their why,
+  before-and-after evidence, hand-overs, blockers and lessons; nothing
+  conversational. Anything saved to agent memory is written on the issue too.
 - Labels and progress comments stay current as you build, test and ship.
   Don't start comments with the date (GitHub timestamps them); dates that
   are evidence (incident times, deadlines) are fine.
