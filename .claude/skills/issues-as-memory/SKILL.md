@@ -104,19 +104,79 @@ PR opened, merged, verified), not after every commit. When `blocked` no longer
 applies, remove it. A reopened issue loses `status:done` and gets the stage
 that matches its remaining work.
 
+**One session owns an issue end to end.** The session that develops an
+issue also runs its verification (QA) and any later stage, and moves every
+label itself: it holds the context, and a hand-over to another session
+loses it. The stages are that session's progress markers, and its comments
+at each stage let another session resume from the issue if it ends.
+Shared resources (a test device, a production service) still have one
+holder at a time, by the procedure the profile names.
+
+**Extra stages.** A profile may add stages (e.g. `status:docs` between
+`status:qa` and `status:done`). The profile's order wins: wherever this
+skill says "move to `status:done`", move the issue to the profile's next
+stage instead, then run that stage (the same session, unless the profile
+says otherwise).
+
+### Closing moves the label (GitHub never does)
+
+Before closing work as completed (by hand, or by merging a PR that says
+`Closes`). A close as not planned instead records the decision that ended
+the work (see "Backlog hygiene"); its unfinished items are dropped on
+purpose, or moved to an open issue where some of them still matter.
+
+- **Nothing left unticked.** Every checklist item in the issue is ticked,
+  or moved, with a link, to an open issue (the follow-up issue of the area,
+  or a new one). A PR that leaves part of an issue undone says `Refs`, not
+  `Closes`.
+- **Before-and-after evidence on the issue.** The last comment shows the
+  same check before and after the change ("Evidence, QA and production
+  tests"), and what was delivered (PR, deploy). A close with no comment
+  leaves the next agent nothing to verify.
+- **Dependents and the epic.** Unblock the issues waiting on it (see
+  "Ordering the work", step 5), tick it in its epic, and close the epic when
+  this was its last open child.
+
+A close, by a PR merge or by hand, leaves the issue on whatever stage label
+it had. This is the step agents forget most: audits found 40-50% of issues
+closed as completed still on `status:review`, `status:in-progress` or
+`status:qa`, in repos running this skill. So:
+
+- **Never run a bare `gh issue close` for completed work.** When the issue
+  has reached its last stage, move the label to `status:done` and close in
+  one step with the helper below. When the profile names a stage still ahead
+  (e.g. QA passed and the profile adds `status:docs`), don't close: move the
+  label to that stage (the label move above), leave the issue open, and
+  run that stage.
+
+  ```bash
+  close_done() {  # close_done <n> "<evidence>" -- only when no profile stage remains
+    for l in $(gh issue view "$1" -R $R --json labels --jq '.labels[].name | select(startswith("status:"))'); do
+      gh issue edit "$1" -R $R --remove-label "$l"
+    done
+    gh issue edit "$1" -R $R --add-label status:done
+    gh issue close "$1" -R $R --reason completed --comment "$2"
+  }
+  ```
+
+- **Right after every merge you make or see**, run the post-merge check in
+  the Loop (step 6) before doing anything else.
+- **A label automation**, where the repo has one (the profile names it),
+  moves labels on close and on PR events. Still run the post-merge check:
+  the automation can't know what a `Refs` issue has left.
+
 ## Every operator request is a task (hard rule)
 
 Everything the operator asks for or decides in a session is captured on
 GitHub before (or while) acting, never only in chat:
 
-- **Request** ("fix X", "add Y", "switch Z") -> search for an existing issue
-  (`gh issue list -R $R --search "<words>" --state all --limit 200`); update
-  it, reopening it if it was closed but the work is not done, or open a new
-  one with a `status:*` and a `priority:*` label (plus any label the profile
+- **Request** ("fix X", "add Y", "switch Z") -> find the existing issue
+  first ("Filing work" below); update it, reopening it if it was closed but
+  the work is not done, or open a new one with a `status:*` and a `priority:*` label (plus any label the profile
   requires) in the same turn. Small requests finished in the same turn still
   get an issue (or a comment on the matching one) with the evidence.
 - **Bug report** (even a vague one: "it freezes", "the button does nothing")
-  -> `bug` issue with what the operator saw, then the evidence you collect
+  -> after the same search, a `bug` issue (or a comment on the matching one) with what the operator saw, then the evidence you collect
   (logs, screenshots, queries). Production-impacting or launch-blocking bugs
   are P0/P1.
 - **Decision** ("ship to beta only", "use provider X", "don't mention Y") ->
@@ -135,13 +195,86 @@ GitHub before (or while) acting, never only in chat:
   repo scripts), and secrets a repo script generates, are ours (see "Keep the
   operator's work minimal").
 
+## Filing work: one issue per problem (hard rule)
+
+Every new issue, whoever asked for it (the operator, a review, an alert, or
+something you found yourself mid-task: a bug, a policy or compliance gap, a
+stale doc), goes through the same steps, so the board never holds the same
+problem twice.
+
+1. **Search before filing.** At least three searches: two different
+   wordings of the problem, plus its area or file name; open and closed
+   (`--state all`); in this repo and, for a cross-repo problem, the other
+   repo too. One keyword search misses most matches.
+
+   ```bash
+   for q in "<words>" "<other words>" "<file or area>"; do
+     gh issue list -R $R --search "$q" --state all --limit 30 --json number,title,state,labels \
+       --jq '.[] | "#\(.number) \(.state) \(.title)"'
+   done
+   ```
+
+2. **A match says the same thing:** add only what is new, as a comment
+   (evidence, where you met it, a link to the issue you are on). Don't open
+   another.
+3. **A match covers part of it, or is out of date:** update its title, body
+   or checklist and say what changed in a comment. Reopen it if it was closed
+   as completed but the work was never done.
+4. **A match is owned by another session** (its latest "Owner:" comment;
+   see "Owning an issue"): comment there and leave the work to its owner.
+5. **A closed issue that regressed** (it was done and broke again): open a
+   new `bug` linked to the old one ("Regression of #n"), unless the old one
+   was closed without the work being done (then reopen it).
+6. **Nothing matches:** open a new issue with its `status:*` and
+   `priority:*` labels and a body that starts with its Status block ("What
+   an issue holds"), link it from the issue you are on (and the epic),
+   and put `Searched: <the queries>` at the end of its body, so the next
+   agent can see what was ruled out.
+7. **Found in passing, while working on something else:** fix it in the
+   current PR only when it is small and in the files that PR already
+   touches, and say so in the PR body; otherwise file it (steps 1-6) and
+   keep going. Never widen a PR silently.
+
+**Follow-ups and deferred review findings** go to the area's one open
+follow-up issue (`<area>: follow-ups`), as a new checklist item naming the
+PR; open that issue only when none is open. A new "follow-ups from #n" issue
+per PR splits the same backlog across many issues that nobody works.
+
+**An issue that grows** past one PR's worth gets split: child issues for
+the parts, the parent becomes their checklist, and its title follows the
+real scope. **True duplicates** found later are closed as duplicates of
+the older (or richer) one, after moving anything new into it:
+
+```bash
+gh issue close <dup> -R $R --reason "not planned" \
+  --comment "Duplicate of #<keep>: <what moved>"
+```
+
+## Owning an issue
+
+Every issue being worked has one owner, in every session, not only when
+many agents run:
+
+- **Claim on start:** comment
+  `Owner: <your session name or agent>, worktree <path>`, then re-read the comments. The earliest "Owner:" after
+  the latest "Released:" holds it; anyone else backs off.
+- **Release on stop:** `Released: <state>` when you stop before the issue
+  is done (what is mid-flight, temporary production changes, devices held).
+  A session that ends mid-task always releases.
+- **Stale owners:** an owner who has posted nothing for 2 hours and is no
+  longer running (the profile says how to check, e.g. the session list)
+  may be taken over: post `Taken over from <owner>: <state found>` first,
+  and restore any temporary production change it left.
+
 ## Ordering the work (Kanban)
 
 Pick work in this order, and say the order when reporting:
 
 1. Any `priority:P0`, even if it means pausing an in-flight agent or other
    work (or taking back a shared device). Announce the interrupt on the
-   paused issue.
+   paused issue. A P0 with no progress comment in 24 hours is not being
+   treated as one: work it now, or lower its priority with the reason
+   (a label that cries wolf hides the next real P0).
 2. A ready `priority:P1` before in-progress P2/P3 work: pause the lower one
    with a comment saying where it stands.
 3. Otherwise `status:in-progress` before starting new work (limit WIP: finish
@@ -150,6 +283,9 @@ Pick work in this order, and say the order when reporting:
    `status:backlog`.
 5. Respect dependencies: write `Blocked by #n` / `Depends on #n` in the body;
    don't start a task whose dependency is open unless the work is independent.
+   When you close an issue, check the issues that name it as their blocker
+   (`gh issue list -R $R --state open --search "#<n> in:body" --label blocked`):
+   remove `blocked` where nothing else blocks them, and say so there.
    Example sequence: fix -> merge -> deploy -> live or device check -> close.
 6. Re-prioritise when the operator changes goals (e.g. "release only to beta"):
    relabel affected issues in the same turn.
@@ -168,14 +304,20 @@ after a message to the owner.
 
 1. **Start of session / after a summary**: `gh issue list -R $R --state open --limit 1000`
    and read the epics or initiatives. Pick the next `status:in-progress` or
-   `status:todo` item. Never start from memory alone.
-2. **Before working**: search first (`gh issue list -R $R --search "<words>" --state all --limit 200`).
-   If no issue covers the task, open one. Move it to `status:in-progress`.
+   `status:todo` item, and read it the cheap way ("What an issue holds").
+   Never start from memory alone.
+2. **Before working**: find the issue ("Filing work"), open one only if none
+   covers the task, check the work isn't done or already in a PR ("Reading
+   an issue without wasting tokens", step 4), claim it ("Owning an issue")
+   and move it to `status:in-progress`.
 3. **While working**: at every meaningful step (built, tested, deployed, found a
-   blocker) add a comment: what changed, evidence (command + result,
+   blocker, decided) add a feed comment and rewrite the Status block ("What
+   an issue holds"): what changed, evidence (command + result,
    commit SHA, URL), and what is next. This is what a future agent will read.
-4. **New work discovered**: open a new issue immediately (follow-ups, bugs,
-   decisions the operator owes). Link it from the epic checklist.
+4. **New work discovered** (follow-ups, bugs, decisions the operator owes,
+   anything you found in passing): file it at once by "Filing work" --
+   search first, update a match, open a new issue only when nothing matches
+   -- and link it from the epic checklist.
 5. **PR**: one branch per task in its own worktree (unless the repo's rules
    allow direct commits). Move the issues the PR delivers (`Closes`) to
    `status:review`; issues it only references (`Refs`) keep the status that
@@ -221,16 +363,28 @@ after a message to the owner.
      `gh pr view $PR -R $R --json body --jq .body | grep -oiE 'refs [a-z0-9/._-]*#[0-9]+'`.
      When you rewrite a PR body from a file, keep these lines.
 
-6. **After merge / deploy**: confirm the `Closes` issues closed and move
-   them from `status:review` to `status:done` (GitHub doesn't change labels).
-   Move issues that wait on verification to `status:qa` until verified, then
-   `status:done` and close with the evidence. Other `Refs` issues keep a
-   stage label that matches what remains (e.g. `status:todo`), plus `blocked`
-   when waiting on the operator or an external party, with a comment saying
-   what is left.
+6. **After merge / deploy** (the same turn, before the next task): confirm
+   the `Closes` issues closed and move them from `status:review` to
+   `status:done` (GitHub doesn't change labels). Move issues that wait on
+   verification to `status:qa` until verified, then `status:done` (or the
+   profile's next stage) and close with the evidence. Other `Refs` issues
+   keep a stage label that matches what remains (e.g. `status:todo` or
+   `status:in-progress`, never `status:review` once no PR for them is
+   open), plus `blocked` when waiting on the operator or an external party,
+   with a comment saying what is left. The post-merge check lists them:
+
+   ```bash
+   gh api graphql -F owner=${R%/*} -F name=${R#*/} -F pr=$PR -f query='query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){closingIssuesReferences(first:100){nodes{number state labels(first:20){nodes{name}}}}}}}' \
+     --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[] | "#\(.number) \(.state) \([.labels.nodes[].name | select(startswith("status:"))])"'
+   gh pr view $PR -R $R --json body --jq .body | grep -oiE 'refs [a-z0-9/._-]*#[0-9]+'   # then check each one's label (other repos' too)
+   ```
+
+   Every `CLOSED` line must say `status:done` (or the profile's next
+   stage); fix any that doesn't with the label move in "Labels".
 7. **Blocked**: add `blocked`, comment the reason and who unblocks it.
 8. **Before ending a turn**: every issue you touched has a current label and a
-   comment saying where it stands.
+   comment saying where it stands, including the ones you closed (a closed
+   issue still on `status:review` is drift: see the queries in "Commands").
 
 ## Checkpoints (hard rule)
 
@@ -238,10 +392,10 @@ Context can be lost at any moment, so progress lives in issues, not in the chat:
 
 - **After every finished task or sub-task** (a commit, a deploy, a fix, a
   review, a decision from the operator) -- stop and update the issue(s) it
-  touched before starting the next thing: a comment with what changed,
+  touched before starting the next thing: a feed comment with what changed,
   evidence (commit SHA / deploy version / test result / URL) and what is next;
-  move the `status:*` label if the issue crossed a stage boundary; tick the
-  epic checklist.
+  rewrite its Status block; move the `status:*` label if the issue crossed a
+  stage boundary; tick the epic checklist.
 - **Every 10 minutes during long sessions** -- a session reminder (`/loop 10m`
   or a session cron) prompts a checkpoint sweep: go through the issues you
   touched since the last checkpoint (keep their numbers in your notes; this
@@ -279,10 +433,22 @@ expects the board to keep moving without having to say "keep working":
   the operator/an external party, and say which ones in the final message.
 - **Self-reminder loop.** At the start of a long session, schedule a recurring
   work sweep (session cron every 10 min, off the :00/:30 marks, or
-  `/loop 10m`) whose prompt is: "Sweep <owner/repo> open issues: checkpoint
-  touched ones, then pick up any unblocked in-scope issue nobody is working
-  on and continue it." The sweep both checkpoints and resumes work; a plain
-  "checkpoint" reminder is not enough.
+  `/loop 10m`) whose prompt is: "Sweep <owner/repo> open issues: re-read
+  the issues-as-memory skill and the profile if they changed on the default
+  branch, checkpoint touched ones, then pick up any unblocked in-scope issue
+  nobody is working on and continue it." The sweep both checkpoints and
+  resumes work; a plain "checkpoint" reminder is not enough.
+- **Rules change while you run.** A session reads this skill and the profile
+  once, when it starts; a rule merged after that never reaches it unless it
+  looks. Note the commit both files were at when you read them, and at every
+  sweep compare it with the default branch; when it moved, re-read them and
+  apply the new rules to your open issues in the same sweep:
+
+  ```bash
+  git fetch -q origin
+  # the synced copy and the profile, plus the canonical skill (in sehangel/claude-skills)
+  git log -1 --format=%h origin/HEAD -- .claude/skills/issues-as-memory .claude/kanban-profile.md issues-as-memory
+  ```
 - **"Continue" / "keep working" from the operator** means: re-read every open
   issue and work all actionable ones, not only the last task discussed.
 - **End-of-turn report** lists open issues by state: worked this turn,
@@ -295,18 +461,9 @@ repositories at once.
 
 ### Many agents at once
 
-- **One owner per issue and PR.** The coordinator assigns issues before it
-  dispatches agents. An agent that picks up an issue on its own comments
-  "Owner: <agent>, worktree <path>", then re-reads the comments: if another
-  "Owner:" comment came first after the latest "Released:" comment, that
-  earlier claim wins and it backs off. When an
-  owner stops or is stopped, it comments "Released: <state>": what's
-  mid-flight, prod changes not yet restored, a device it holds. Never put two
-  agents on one issue.
-- **Taking over from a stale owner:** if an owner has posted nothing for
-  2 hours and is no longer running (the coordinator checks its agent list),
-  the coordinator may reassign. Post "Taken over from <agent>: <state found>".
-  Restore any temporary prod change that agent left before continuing.
+- **One owner per issue and PR** ("Owning an issue"). The coordinator
+  assigns issues before it dispatches agents, and reassigns a stale owner's
+  issue after checking its agent list. Never put two agents on one issue.
 - **One production deploy at a time, granted by one coordinator.** This
   covers service deploys, rollouts and prod flag flips. A "check, then merge"
   by each agent races: two agents can both see an idle pipeline and merge.
@@ -373,6 +530,37 @@ repositories at once.
 
 ### Evidence, QA and production tests
 
+- **Every change is proven before and after (hard rule).** Proof is a
+  comparison, not a single "it works":
+  1. **Capture "before" first,** before editing anything: the same
+     screenshot, command output, query, measurement or log line that shows
+     the problem (or, for a new feature, that it is absent). Once the code
+     changes, the "before" is gone.
+  2. **Run the same check after,** under the same conditions (same device,
+     account, data, command, query window), on the new build or deploy.
+  3. **Post both side by side** in one comment, naming the build, commit or
+     deploy each was taken on:
+
+     ```markdown
+     | Check | Before (<build / commit>) | After (<build / commit>) | Result |
+     | --- | --- | --- | --- |
+     | <what is compared, and how> | <screenshot, output, number> | <same form> | PASS / FAIL |
+     ```
+
+     One row per check; say what changed under the table when it isn't
+     obvious from the two cells.
+
+  What counts as before and after depends on the change:
+  - code: the check that shows the problem, run on the old and new build;
+  - a visual asset (icon, screenshot, rendered page, store image): the
+    rendered old and new, side by side;
+  - text-only docs: the diff is the before and after; link it, no
+    screenshot needed.
+
+  If "before" can no longer be captured (the change is already live), say
+  so and use the last known state (an older build, a log, an earlier
+  comment), never nothing.
+
 - **Device or visual checks: no screenshot means no proof.** The proof (or a
   small GIF) is embedded in the comment that ticks the checklist item. Crop
   or blur personal data, tokens and account details first.
@@ -420,22 +608,129 @@ repositories at once.
   - close what's done, with evidence;
   - close what's superseded or obsolete as not planned, naming the decision
     that ended it;
-  - merge duplicates;
+  - merge duplicates ("Filing work"), and fold extra per-PR follow-up
+    issues into each area's one follow-up issue;
+  - release or take over stale owners ("Owning an issue"), and re-triage
+    P0s with no progress in 24 hours;
+  - unblock issues whose blockers closed, and close epics whose children
+    are all closed;
+  - keep stage and priority honest: a P0 or P1 is never `status:backlog`
+    (backlog means not prioritized: move it to `status:todo`, or lower the
+    priority with the reason); when open P1s outnumber what can start next
+    (more than about 10), re-triage them, most recently touched first, so
+    P1 still means "next up";
   - fix label drift: every open issue has exactly one `status:*` and one
     `priority:*` label, and issues filed by automations (templates, alert
-    bots) get theirs too.
+    bots) get theirs too;
+  - fix closed drift: issues closed as completed but not on `status:done`,
+    and open `status:review` issues with no open PR (the queries in
+    "Commands"). An open issue whose PRs all merged gets the stage of what
+    is left, or is closed with its evidence.
 - **Postponed features** keep their design (prototype links, the agreed
   approach) in a `status:backlog` issue, so picking them up later redoes
   nothing.
 
-## Comment style
+## What an issue holds (hard rule)
 
-GitHub timestamps every comment and label change, so don't start comments
-with the date or time of writing. Start with the substance: what changed,
-evidence, what's next. Dates that are evidence belong in the text: event
-times in an incident timeline, a deadline and its source, a historical
-start or finish date, an external timestamp (a log line), and any dated
-header a repo workflow requires.
+An issue is complete on its own: any agent that reads it understands what it
+is, where it stands, what was decided and why, and what is next, without the
+chat that produced it. It has two parts.
+
+### The Status block: the issue's current state
+
+The top of the issue body is a short block that is rewritten (not appended
+to) every time the issue crosses a stage, a decision is made, or the next
+step changes:
+
+```markdown
+<!-- status:begin -->
+## Status
+
+| Field | Value |
+| --- | --- |
+| **Stage** | in-progress |
+| **Owner** | <session or agent> |
+| **Next** | <one line, or several as <br>• items> |
+| **Done** | <PRs, deploys, checks, each with its link> |
+| **Decided** | <decision> -- <why, and why not the alternative> (<comment link>) |
+| **Open** | <questions, blockers and who unblocks them, or none> |
+<!-- status:end -->
+```
+
+The Stage cell is the stage label without `status:` (a repo's label bot may
+keep it in step). Older blocks written as lines (`**Stage:** … · **Owner:** …`)
+are still read; rewrite them as the table when you next update them.
+
+Keep it under 15 lines; details live in the feed, linked from here. Edit only
+the block (read the body, replace the block, write it back), never the rest
+of the body that someone else wrote:
+
+```bash
+gh issue view $n -R $R --json body --jq .body > "$TMPDIR/body-$n.md"
+# replace the lines between status:begin and status:end, then:
+gh issue edit $n -R $R --body-file "$TMPDIR/body-$n.md"
+```
+
+An issue whose feed passed about 30 comments gets its block rewritten as the
+summary of everything so far, ending
+`Summary through <link to the latest comment it covers>`, so a reader can skip the older comments.
+
+### The feed: one comment per thing that matters
+
+Comments are the issue's log. Each one stands on its own and is one of:
+
+- **a decision**, with why, and why not the other option (an operator
+  decision quotes the operator);
+- **evidence**: before and after ("Evidence, QA and production tests");
+- **a stage change** or hand-over: what was done, what is left, the state
+  of anything shared or temporary (a flag, a device, a test server);
+- **an audit finding**: what was checked, how, and what it showed;
+- **a blocker**: what blocks it and who unblocks it;
+- **a lesson**: what went wrong and the rule that now prevents it.
+
+Nothing else goes in the feed: no "on it", "starting", "will do", "thanks",
+no restating the issue or an earlier comment, no progress chatter between
+real steps, and no dates of writing (GitHub timestamps every comment; dates
+that are evidence, such as incident times, deadlines or log timestamps,
+belong in the text). Update the Status block in the same step.
+
+### Agent memory is mirrored on the issue
+
+When you save something to your own memory (a decision, a fact, a lesson, a
+preference of the operator), write it on GitHub in the same turn: on the
+issue it belongs to (as a decision or lesson comment, plus the Status
+block), or, if it concerns the whole repo, in the profile. Memory is a
+private copy that other agents and sessions can't read; the issue is the
+shared one. Your memory entry links the issue.
+
+### Presenting information (operator rule)
+
+Everything written for a reader (Status blocks, feed comments, PR bodies,
+reports to the operator) is structured and formatted, never a wall of prose:
+
+- a one-line lead saying what it is, then the substance;
+- a **table** wherever the data has rows: checks and results, before and
+  after, PRs and issues, sessions, numbers, options compared;
+- bullets for the rest, short and parallel; a heading per part when there
+  are several;
+- links and numbers inline (`#n`, commit, version), no restating.
+
+### Reading an issue without wasting tokens
+
+1. Read the body (the Status block first).
+2. Read the comments the block links, and the feed after its
+   `Summary through` link. Without that link the feed is short (it is
+   required past about 30 comments), so read all of it: the block is a
+   summary, not a replacement for the details. Long-running queue or log
+   issues (a device queue, a release log) are read from the end:
+   `gh api "repos/$R/issues/$n/comments?per_page=20&page=$last"`, or
+   `gh issue view $n -R $R --comments | tail -n 200`.
+3. Don't reread an issue you already read this session unless its
+   `updatedAt` changed.
+4. Before doing any work, check it isn't done or in flight: the Status
+   block's **Done**, the open PRs for the issue
+   (`gh pr list -R $R --state all --search "<n>"`), and branches named for
+   it. Reuse or finish them; never start a second PR for the same work.
 
 ## Commands
 
@@ -444,12 +739,17 @@ R=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh issue create -R $R --title "..." --label "status:todo,priority:P2" --body "..."
 gh issue list -R $R --state open --label priority:P0 --limit 1000   # anything urgent?
 gh issue comment 18 -R $R --body "Deployed abc123; /healthz 200. Next: ..."
-gh issue close 18 -R $R --reason completed --comment "Verified: ..."
+close_done 18 "Verified: ..."     # completed: label + close (see "Labels")
 gh issue close 18 -R $R --reason "not planned" --comment "Why: ..."
 # label drift: open issues without exactly one status and one priority label
 gh issue list -R $R --state open --limit 1000 --json number,labels --jq \
   '.[] | select(([.labels[].name | select(startswith("status:"))] | length) != 1
             or ([.labels[].name | select(startswith("priority:"))] | length) != 1) | .number'
+# closed drift: closed as completed, not on status:done (recent 300 closes)
+gh issue list -R $R --state closed --limit 300 --json number,stateReason,labels --jq \
+  '.[] | select(.stateReason == "COMPLETED" and ([.labels[].name] | index("status:done") | not)) | .number'
+# open status:review issues: check each still has an open PR
+gh issue list -R $R --state open --label status:review --limit 1000 --json number --jq '.[].number'
 ```
 
 (Stage and priority moves: see "Labels" above.) If `gh issue edit` fails
