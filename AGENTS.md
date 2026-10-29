@@ -31,9 +31,10 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
   are evidence (incident times, deadlines) are fine.
 - Read the open issues at the start of every session and after every context
   summary.
-- Never end a turn while authorized, unblocked work is untouched: work it,
-  delegate it, or record on the issue why it can't move. An open issue alone
-  is not permission to start unrelated or production-affecting work.
+- Never end a turn while authorized, unblocked work is untouched: work it
+  yourself, or record on the issue why it can't move; don't spawn sub-agents
+  just to clear the board. An open issue alone is not permission to start
+  unrelated or production-affecting work.
 - No GitHub access in the session (a read-only review or `@claude` job, no
   login)? Do the work, skip the issue steps you can't run, and list the
   updates you couldn't make in the PR or final message.
