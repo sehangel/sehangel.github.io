@@ -271,7 +271,7 @@ many agents run:
 ## Watching your issues (hard rule)
 
 Every agent posts as the operator's GitHub account, so GitHub alone can't
-tell an agent's comment from the operator's, or who owns an issue. Three
+tell an agent's comment from the operator's, or who owns an issue. Four
 rules make it visible, and every agent (Claude Code, Codex, any LLM) follows
 them in every repository:
 
@@ -281,30 +281,33 @@ them in every repository:
   `<!-- agent: Waitlist session [fdbfec] -->`). A comment by a person with
   no such line is the operator's. Never copy the line into text you didn't
   write.
-- **Name yourself as owner.** Write your session name in the Status block's
-  Owner field when you claim an issue ("Owning an issue"). It is the only
-  record of who owns an issue.
+- **Name yourself as owner.** When you claim an issue ("Owning an issue"),
+  also write your session name in the Status block's Owner field. The
+  `Owner:` comment still settles two agents claiming at once; the field is
+  what the watch and the bots read.
 - **Watch the issues you own.** While the session runs, check them every
   10 minutes (the checkpoint loop, "Checkpoints"), and at the start of
   every turn when you have no background loop (Codex and other tools). The
-  watch lists what others did since your last check (`issue_watch`,
-  "Commands"):
+  watch lists what others did since your last check, closed issues
+  included (`issue_watch`, "Commands"):
   - **an operator comment** (unsigned): act on it in this turn. Answer on
     the issue, signed; record a decision in the Status block's Decided
     field and the feed ("Operator decisions" in "Checkpoints").
   - **a bot comment** (a stall ask, a QA-owed reopen, an evidence request,
     a close check): do what it asks, or answer why not.
-  - **another agent's comment or a label someone else moved**: read it,
-    and re-check the issue's stage and owner before you go on.
+  - **another agent's comment, or a label, close or reopen someone else
+    made**: read it, and re-check the issue's stage and owner before you
+    go on.
 
   Nothing in the watch may wait for "later": it is the operator talking to
   you through the issue.
+
 - **Hand over before you stop.** A session that ends, or goes idle with
   the issue unfinished, sets Owner to `none (released)`, writes Next and
   posts `Released: <state>`, so nothing waits on a session that is gone.
-  The repo's bots (when it has them, see the profile) are the safety net:
-  they ask on issues left stalled and list operator comments no agent
-  answered.
+  Where the repository has a label bot (its profile says so), the bot is
+  the safety net: it asks on stalled issues and lists operator comments no
+  agent answered. Elsewhere the watch is the only net.
 
 ## Ordering the work (Kanban)
 
@@ -807,31 +810,34 @@ gh issue list -R $R --state open --label status:review --limit 1000 --json numbe
 ```
 
 Watching your issues ("Watching your issues"): run it with your session
-name and the time of your last check. It lists the comments others posted
-since then on the open issues whose body names you (your Owner field),
-marked OPERATOR, agent or bot:
+name and the time of your last check. It reads every issue whose body names
+you (your Owner field) and that changed since then, open or closed, and lists
+the comments others posted, marked OPERATOR, agent or bot, and the label,
+close and reopen events, all pages included:
 
 ```bash
 issue_watch() {  # usage: issue_watch "<your session name>" 2026-10-30T09:00:00Z
   local me="$1" since="$2"
-  gh issue list -R "$R" --state open --limit 200 --search "\"$me\" in:body" \
-    --json number --jq '.[].number' | while read -r n; do
-    gh api "repos/$R/issues/$n/comments?since=$since&per_page=100" | jq -r \
-      --arg me "<!-- agent: $me -->" --arg since "$since" --arg n "$n" '.[]
+  gh issue list -R "$R" --state all --limit 200 \
+    --search "\"$me\" in:body updated:>=${since%%T*}" --json number --jq '.[].number' |
+  while read -r n; do
+    gh api --paginate --slurp "repos/$R/issues/$n/comments?since=$since&per_page=100" | jq -r \
+      --arg me "<!-- agent: $me -->" --arg since "$since" --arg n "$n" '.[][]
       | select(.created_at >= $since and ((.body // "") | contains($me) | not))
       | (if .user.type == "Bot" then "bot" elif ((.body // "") | test("<!-- agent:"))
          then "agent" else "OPERATOR" end) as $who
       | "#\($n) \(.created_at) \($who): \(.body[0:200] | gsub("\n"; " "))"'
-    gh api "repos/$R/issues/$n/events?per_page=100" | jq -r --arg since "$since" --arg n "$n" \
-      '.[] | select(.created_at >= $since and (.event == "labeled" or .event == "unlabeled"
+    gh api --paginate --slurp "repos/$R/issues/$n/events?per_page=100" | jq -r \
+      --arg since "$since" --arg n "$n" '.[][]
+      | select(.created_at >= $since and (.event == "labeled" or .event == "unlabeled"
          or .event == "closed" or .event == "reopened"))
       | "#\($n) \(.created_at) \(.actor.login) \(.event) \(.label.name // "")"'
   done
 }
 ```
 
-The events line also shows your own label moves (every agent shares the
-account); skip the ones you made.
+The events include your own label moves (every agent shares the account);
+skip the ones you made.
 
 (Stage and priority moves: see "Labels" above.) If `gh issue edit` fails
 with a "Projects (classic)" GraphQL error (older `gh`), use the REST API:
