@@ -24,6 +24,10 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
 - Issues link natively: an issue blocked by another gets GitHub's "blocked
   by" link (the label bot sets and clears `blocked` from it), and an epic's
   children are its sub-issues.
+- Work the task you were given first; with none, pick from the repo's
+  `ready-queue` issue (within what the operator authorized) and
+  `/claim <session name>` it; `/release` when you stop. A PR labelled `waiting:author` is yours to
+  fix (conflicts included). Never comment `/merge`: only the operator does.
 - Every issue is complete on its own: a Status block at the top of its body
   (stage, owner, next step, what is done, what was decided and why),
   rewritten at each step, and a comment feed of decisions with their why,
