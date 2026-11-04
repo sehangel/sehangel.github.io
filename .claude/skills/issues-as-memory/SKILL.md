@@ -133,7 +133,10 @@ off, again with a comment, once every blocker is closed, and puts it back
 if a blocker reopens. Without a bot, move `blocked` yourself.
 A wait that is not an issue (the operator, a vendor, a date) is still a
 `blocked` set by hand, named in the Status block's Open field. The bot never
-removes a `blocked` it did not set. Link across repositories of the same
+removes a `blocked` it did not set. A blocker closed as not planned or as a
+duplicate was dropped, not done: `blocked` stays, the bot asks on the
+blocked issue, and its owner removes the link (if the work no longer needs
+it) or links the issue that now carries the work. Link across repositories of the same
 owner too, and point the link at the issue that carries the remaining work
 (the QA follow-up, not the closed fix), so the close that unblocks it is the
 right one.
@@ -183,6 +186,10 @@ purpose, or moved to an open issue where some of them still matter.
 - **Dependents and the epic.** The issues it blocks lose `blocked` with
   the close (the label bot does it; without one, do it yourself: "Relations").
   Close the epic when this was its last open sub-issue.
+
+A close as not planned or as a duplicate takes the stage label off (Golzak
+Bot does it; without the bot, remove it yourself): no stage is true of work
+that won't be done. Reopening it gives it a stage again.
 
 A close, by a PR merge or by hand, leaves the issue on whatever stage label
 it had. This is the step agents forget most: audits found 40-50% of issues
