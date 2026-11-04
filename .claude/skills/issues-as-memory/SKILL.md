@@ -127,9 +127,10 @@ issues, counts an epic's progress, and the label bot acts on them.
 The label bot is Golzak Bot (`golzak-bot[bot]`, sehangel/golzak-bot), on
 every sehangel repository unless the profile says it is off there.
 
-**Blocked by another issue:** link it. Where the label bot runs, the link sets `blocked` with a comment naming the blocker. The
-bot takes `blocked` off, again with a comment, once every blocker is closed,
-and puts it back if a blocker reopens. Without a bot, move `blocked` yourself.
+**Blocked by another issue:** link it. Where the label bot runs, the link
+sets `blocked` with a comment naming the blocker. The bot takes `blocked`
+off, again with a comment, once every blocker is closed, and puts it back
+if a blocker reopens. Without a bot, move `blocked` yourself.
 A wait that is not an issue (the operator, a vendor, a date) is still a
 `blocked` set by hand, named in the Status block's Open field. The bot never
 removes a `blocked` it did not set. Link across repositories of the same
