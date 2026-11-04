@@ -21,6 +21,9 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
 - PRs reference every issue they handle: `Closes #n` for each issue they
   deliver, `Refs #n` for epics and for work an operator or a later PR
   finishes. Other repos' issues use the full `owner/repo#n` form.
+- Issues link natively: an issue blocked by another gets GitHub's "blocked
+  by" link (the label bot sets and clears `blocked` from it), and an epic's
+  children are its sub-issues.
 - Every issue is complete on its own: a Status block at the top of its body
   (stage, owner, next step, what is done, what was decided and why),
   rewritten at each step, and a comment feed of decisions with their why,
