@@ -69,7 +69,7 @@ Exactly one stage label per open issue:
 | `status:review`      | PR open, waiting on review/CI                                                                     |
 | `status:qa`          | Merged or deployed; needs a live, device or production check (the profile says what the check is) |
 | `status:done`        | Verified; close the issue with evidence                                                           |
-| `blocked`            | Add alongside a stage label; say why and who unblocks                                             |
+| `blocked`            | Add alongside a stage label; say why and who unblocks (blocked by an issue: link it, "Relations") |
 
 Exactly one priority label per open issue:
 
@@ -80,8 +80,8 @@ Exactly one priority label per open issue:
 | `priority:P2` | Normal planned work                                                                                       | Default for new tasks                                                                         |
 | `priority:P3` | Backlog / nice to have                                                                                    | Only when nothing P0-P2 is actionable                                                         |
 
-Also `bug` for defects. Initiatives use a checklist of child issues (the
-`epic` label where the repo has it). Keep other classification labels the
+Also `bug` for defects. Initiatives (`epic`) hold their child issues as
+GitHub sub-issues ("Relations"). Keep other classification labels the
 repo uses (areas, `documentation`, `enhancement`, provenance); the
 one-label rule applies only to `status:*` and `priority:*`. If a label is
 missing, create it: `gh label create "<label>" -R $R --force` (the sync
@@ -118,6 +118,52 @@ skill says "move to `status:done`", move the issue to the profile's next
 stage instead, then run that stage (the same session, unless the profile
 says otherwise).
 
+### Relations: "blocked by" and sub-issues
+
+GitHub links issues natively. Use the links, not prose in the body ("Blocked
+by #9", a hand-written checklist of issues): GitHub shows them on both
+issues, counts an epic's progress, and the label bot acts on them.
+
+The label bot is Golzak Bot (`golzak-bot[bot]`, sehangel/golzak-bot), on
+every sehangel repository unless the profile says it is off there.
+
+**Blocked by another issue:** link it. Where the label bot runs, the link sets `blocked` with a comment naming the blocker. The
+bot takes `blocked` off, again with a comment, once every blocker is closed,
+and puts it back if a blocker reopens. Without a bot, move `blocked` yourself.
+A wait that is not an issue (the operator, a vendor, a date) is still a
+`blocked` set by hand, named in the Status block's Open field. The bot never
+removes a `blocked` it did not set. Link across repositories of the same
+owner too, and point the link at the issue that carries the remaining work
+(the QA follow-up, not the closed fix), so the close that unblocks it is the
+right one.
+
+```bash
+# #12 is blocked by #9. The API takes the blocker's id, not its number;
+# a blocker in another repo: read its id from that repo.
+id=$(gh api repos/$R/issues/9 --jq .id)
+gh api -X POST repos/$R/issues/12/dependencies/blocked_by -F issue_id=$id
+gh api repos/$R/issues/12/dependencies/blocked_by --jq '.[] | "#\(.number) \(.state)"'  # what blocks #12
+gh api repos/$R/issues/9/dependencies/blocking --jq '.[] | "#\(.number) \(.state)"'     # what #9 blocks
+gh api -X DELETE repos/$R/issues/12/dependencies/blocked_by/$id                         # unlink
+```
+
+**An epic's children are its sub-issues,** so the epic shows how many are
+done. Create a child under its epic, or add an existing one. Where the label
+bot runs, a child whose body says `Refs #epic` (an open issue labelled `epic`)
+becomes its sub-issue by itself. An issue has one parent: the bot never
+replaces one set by hand. The sub-issue list is the epic's checklist, so
+don't keep a second hand-written list of the same issues. A checklist item
+in the epic is only for work that has no issue of its own.
+
+```bash
+child=$(gh api repos/$R/issues/31 --jq .id)            # the child's id, not its number
+gh api -X POST repos/$R/issues/16/sub_issues -F sub_issue_id=$child   # #31 under epic #16
+gh api repos/$R/issues/16/sub_issues --jq '.[] | "#\(.number) \(.state)"'
+gh api graphql -F owner=${R%/*} -F name=${R#*/} -f query='query($owner:String!,$name:String!){repository(owner:$owner,name:$name){issue(number:16){subIssuesSummary{total completed}}}}'
+```
+
+(Recent gh releases also take `gh issue create --parent <n>`; `gh issue create --help` shows whether yours does.)
+
 ### Closing moves the label (GitHub never does)
 
 Before closing work as completed (by hand, or by merging a PR that says
@@ -133,9 +179,9 @@ purpose, or moved to an open issue where some of them still matter.
   same check before and after the change ("Evidence, QA and production
   tests"), and what was delivered (PR, deploy). A close with no comment
   leaves the next agent nothing to verify.
-- **Dependents and the epic.** Unblock the issues waiting on it (see
-  "Ordering the work", step 5), tick it in its epic, and close the epic when
-  this was its last open child.
+- **Dependents and the epic.** The issues it blocks lose `blocked` with
+  the close (the label bot does it; without one, do it yourself: "Relations").
+  Close the epic when this was its last open sub-issue.
 
 A close, by a PR merge or by hand, leaves the issue on whatever stage label
 it had. This is the step agents forget most: audits found 40-50% of issues
@@ -243,7 +289,7 @@ PR; open that issue only when none is open. A new "follow-ups from #n" issue
 per PR splits the same backlog across many issues that nobody works.
 
 **An issue that grows** past one PR's worth gets split: child issues for
-the parts, the parent becomes their checklist, and its title follows the
+the parts, added as its sub-issues ("Relations"), and its title follows the
 real scope. **True duplicates** found later are closed as duplicates of
 the older (or richer) one, after moving anything new into it:
 
@@ -324,11 +370,11 @@ Pick work in this order, and say the order when reporting:
    or hand off before starting more than one task per worker or device).
 4. `priority:P1`, then P2, then P3, within each `status:todo` before
    `status:backlog`.
-5. Respect dependencies: write `Blocked by #n` / `Depends on #n` in the body;
-   don't start a task whose dependency is open unless the work is independent.
-   When you close an issue, check the issues that name it as their blocker
-   (`gh issue list -R $R --state open --search "#<n> in:body" --label blocked`):
-   remove `blocked` where nothing else blocks them, and say so there.
+5. Respect dependencies: link the blocker with GitHub's "blocked by"
+   ("Relations"), never only in prose; don't start a task whose blocker is
+   open unless the work is independent. A close unblocks its dependents
+   through the link; check them (`gh api repos/$R/issues/<n>/dependencies/blocking`)
+   where no label bot runs.
    Example sequence: fix -> merge -> deploy -> live or device check -> close.
 6. Re-prioritise when the operator changes goals (e.g. "release only to beta"):
    relabel affected issues in the same turn.
@@ -360,7 +406,7 @@ after a message to the owner.
 4. **New work discovered** (follow-ups, bugs, decisions the operator owes,
    anything you found in passing): file it at once by "Filing work" --
    search first, update a match, open a new issue only when nothing matches
-   -- and link it from the epic checklist.
+   -- and add it to its epic as a sub-issue.
 5. **PR**: one branch per task in its own worktree (unless the repo's rules
    allow direct commits). Move the issues the PR delivers (`Closes`) to
    `status:review`; issues it only references (`Refs`) keep the status that
@@ -379,15 +425,15 @@ after a message to the owner.
      that must be confirmed in the field), link it with `Refs #n` instead,
      move it to `status:qa` after the merge, and close it by hand with the
      proof.
-     If other issues say `Blocked by #n` or `Depends on #n` because of that
-     check, point them at the issue that carries the check, so closing `#n`
+     If other issues are blocked by `#n` because of that check, move their
+     "blocked by" link to the issue that carries the check, so closing `#n`
      doesn't unblock them early.
    - `Refs #n` only for issues the PR advances but cannot finish, because
      the rest is an operator or external action (a dashboard click, a store
      approval, a later PR). Say in the issue what remains.
-   - Epics are never closed by a PR: use `Refs #epic` and tick its
-     checklist. GitHub does not close an epic on its own: when its last
-     child closes, move the epic to `status:done`, then close it
+   - Epics are never closed by a PR: use `Refs #epic` (its sub-issues
+     count the progress). GitHub does not close an epic on its own: when its last
+     sub-issue closes, move the epic to `status:done`, then close it
      (`gh issue close <epic> -R $R --reason completed`) with a one-line summary.
    - Each issue appears once in the body, with one keyword: don't write
      both `Refs #n` and `Closes #n`.
@@ -426,7 +472,8 @@ after a message to the owner.
    Every `CLOSED` line must say `status:done` (or the profile's next
    stage); fix any that doesn't with the label move in "Labels".
 
-7. **Blocked**: add `blocked`, comment the reason and who unblocks it.
+7. **Blocked**: by an issue, link it ("Relations"); by anything else, add
+   `blocked` and comment the reason and who unblocks it.
 8. **Before ending a turn**: every issue you touched has a current label and a
    comment saying where it stands, including the ones you closed (a closed
    issue still on `status:review` is drift: see the queries in "Commands").
@@ -440,7 +487,7 @@ Context can be lost at any moment, so progress lives in issues, not in the chat:
   touched before starting the next thing: a feed comment with what changed,
   evidence (commit SHA / deploy version / test result / URL) and what is next;
   rewrite its Status block; move the `status:*` label if the issue crossed a
-  stage boundary; tick the epic checklist.
+  stage boundary; its epic counts it through the sub-issue link.
 - **Every 10 minutes during long sessions** -- a session reminder (`/loop 10m`
   or a session cron) prompts a checkpoint sweep: go through the issues you
   touched since the last checkpoint (keep their numbers in your notes; this
