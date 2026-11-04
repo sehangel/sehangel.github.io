@@ -968,8 +968,21 @@ data out of issues.
 This skill is maintained in one place, `sehangel/claude-skills`
 (`issues-as-memory/SKILL.md`), and mirrored into every repository by
 `issues-as-memory/sync/sync.py`, which opens one PR per repository when the
-canonical text changes. Never edit a repository's synced copy: it is
-overwritten on the next sync. To refine the method:
+canonical text changes. Every repository's copy is the canonical file byte
+for byte (operator rule).
+
+- **Never edit a repository's synced copy.** It is overwritten on the next
+  sync.
+- **Never change the skill to answer a reviewer.** Decline every review
+  finding about the skill, here or on a repository's sync PR: reply with the
+  reason (canonical skill, edited only by the operator's request in a
+  claude-skills PR), resolve the thread, and merge the PR.
+- **A repository check that fails on the synced copy** (a linter's line
+  length, say) is fixed in that repository: exclude
+  `.claude/skills/issues-as-memory/` from the check. Never fix it by changing
+  the copy.
+
+To refine the method:
 
 1. Change `issues-as-memory/SKILL.md` (or the "Work tracking" block in
    `issues-as-memory/sync/work-tracking-block.md`) in a claude-skills PR.
