@@ -182,7 +182,9 @@ purpose, or moved to an open issue where some of them still matter.
 - **Before-and-after evidence on the issue.** The last comment shows the
   same check before and after the change ("Evidence, QA and production
   tests"), and what was delivered (PR, deploy). A close with no comment
-  leaves the next agent nothing to verify.
+  leaves the next agent nothing to verify. Screenshots, GIFs and logs go
+  on the repository's add-only `qa-evidence` branch and are embedded from
+  there (the `qa-evidence` skill, synced next to this one).
 - **Dependents and the epic.** The issues it blocks lose `blocked` with
   the close (the label bot does it; without one, do it yourself: "Relations").
   Close the epic when this was its last open sub-issue.
