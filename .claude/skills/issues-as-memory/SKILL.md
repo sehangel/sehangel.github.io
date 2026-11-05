@@ -63,7 +63,7 @@ Exactly one stage label per open issue:
 
 | Label                | Meaning                                                                                           |
 | -------------------- | ------------------------------------------------------------------------------------------------- |
-| `status:backlog`     | Known, not prioritized                                                                            |
+| `status:backlog`     | Known, not scheduled yet (P2 or P3 only; Golzak Bot moves a P0 or P1 to `status:todo`)            |
 | `status:todo`        | Prioritized, ready to start                                                                       |
 | `status:in-progress` | Someone is working on it now                                                                      |
 | `status:review`      | PR open, waiting on review/CI                                                                     |
@@ -838,8 +838,9 @@ repositories at once.
   - unblock issues whose blockers closed, and close epics whose children
     are all closed;
   - keep stage and priority honest: a P0 or P1 is never `status:backlog`
-    (backlog means not prioritized: move it to `status:todo`, or lower the
-    priority with the reason); when open P1s outnumber what can start next
+    (backlog means not scheduled yet: move it to `status:todo`, or lower the
+    priority with the reason; Golzak Bot moves it to `status:todo` where it
+    runs); when open P1s outnumber what can start next
     (more than about 10), re-triage them, most recently touched first, so
     P1 still means "next up";
   - fix label drift: every open issue has exactly one `status:*` and one
