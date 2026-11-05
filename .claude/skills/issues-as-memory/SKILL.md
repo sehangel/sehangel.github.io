@@ -332,6 +332,9 @@ many agents run:
 
 Golzak Bot keeps one closed, locked issue per repository labelled
 `ready-queue`, rewritten after every change:
+- **Waiting on you**: every issue waiting on the operator
+  (`waiting:operator`), with its ask: the operator's one list ("Asking the
+  operator");
 - what waits for the operator's `/merge`;
 - **Ready to take**: free, unblocked work, P0 first, then oldest;
 - who works on what;
@@ -349,6 +352,37 @@ operator's OK. `/claim` what you take. Never comment on the queue issue.
 q=$(gh issue list -R $R --label ready-queue --state all --json number --jq '.[0].number')
 gh issue view $q -R $R --json body --jq .body
 ```
+
+### Asking the operator: `waiting:operator` (hard rule)
+
+The operator reads one list: the ready queue's **Waiting on you** section,
+on GitHub, often away from the laptop. Every issue that needs them (a
+decision, an approval, a browser or account step, a secret only they hold)
+is on it, and every agent asks the same way:
+
+1. **Write the ask in the Status block's Open field**, starting with
+   `Operator:` and saying exactly what to answer:
+   `Operator: approve the first OVH base-pool order (yes or no)`. One ask
+   per issue; the options and your recommendation go in a signed feed
+   comment the field links to. Add `blocked` too when the work can't move
+   without the answer.
+2. **The label follows the field.** Golzak Bot puts `waiting:operator` on
+   the issue within a minute and lists it under *Waiting on you*. It keeps
+   the label equal to the field, so never add or remove it by hand. In a
+   repository without the bot (its profile says so), add the label
+   yourself and take it off with the answer.
+3. **Ask in chat too, in the same turn**: the question, the options, your
+   pick and the issue link. The operator answers wherever they are, in
+   chat or on the issue.
+4. **Watch for the answer** ("Watching your issues"): an unsigned comment
+   on the issue is the operator's answer. Act on it in the turn you see it,
+   and record it in Decided. Rewrite Open so it no longer names the
+   operator (`none`, or the next blocker), which takes the label off. Remove
+   `blocked` if nothing else blocks it. An answer given in chat goes on the
+   issue too: post it (signed, quoting the operator), then do the same.
+
+Name the operator in Open only for an ask: a field that waits on someone
+else names them, and one with nothing open says `none`.
 
 ### PR states: who acts next
 
@@ -408,7 +442,9 @@ them in every repository:
   included (`issue_watch`, "Commands"):
   - **an operator comment** (unsigned): act on it in this turn. Answer on
     the issue, signed; record a decision in the Status block's Decided
-    field and the feed ("Operator decisions" in "Checkpoints").
+    field and the feed ("Operator decisions" in "Checkpoints"). On a
+    `waiting:operator` issue it is the answer to your ask: rewrite Open as
+    "Asking the operator" says.
   - **a bot comment** (a stall ask, a QA-owed reopen, an evidence request,
     a close check): do what it asks, or answer why not.
   - **another agent's comment, or a label, close or reopen someone else
