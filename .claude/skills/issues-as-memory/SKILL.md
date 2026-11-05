@@ -63,7 +63,7 @@ Exactly one stage label per open issue:
 
 | Label                | Meaning                                                                                           |
 | -------------------- | ------------------------------------------------------------------------------------------------- |
-| `status:backlog`     | Known, not prioritized                                                                            |
+| `status:backlog`     | Known, not scheduled yet (P2 or P3 only; Golzak Bot moves a P0 or P1 to `status:todo`)            |
 | `status:todo`        | Prioritized, ready to start                                                                       |
 | `status:in-progress` | Someone is working on it now                                                                      |
 | `status:review`      | PR open, waiting on review/CI                                                                     |
@@ -393,6 +393,68 @@ Before any touch of one (adb, an install, a screenshot), follow the
 `phone-queue` skill (synced next to this one): the queue is
 sehangel/Vantom-VPN#226 for every agent, and Claude Code sessions also
 message each other.
+
+### Stacked PRs: split dependent work into a chain (default for multi-step work)
+
+GitHub's stacked pull requests are a chain of PRs in one repository: the
+bottom PR targets the trunk (usually `main`), and each PR above targets the
+branch of the PR below it, so every PR shows only its own layer's diff. Use
+a stack, not one large PR and not a wait for each merge, whenever a task
+needs two or more reviewable changes that depend on each other: a schema
+before the code that uses it, a service before its UI, a refactor before a
+feature, a library before its callers. Independent changes stay separate
+PRs; a single small change stays one PR.
+
+Official docs (read them when unsure, and follow them over memory):
+[about stacked PRs](https://docs.github.com/en/pull-requests/get-started/about-stacked-prs),
+[quickstart](https://docs.github.com/en/pull-requests/get-started/stacked-prs-quickstart),
+[CLI commands](https://docs.github.com/en/pull-requests/reference/stacked-prs-cli-commands),
+[managing a stack](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/managing-stacked-pull-requests),
+[merging a stack](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/merging-stacked-pull-requests),
+[stacks for AI agents](https://docs.github.com/en/copilot/tutorials/stack-ai-generated-code-in-pull-requests).
+The `gh-stack` skill (GitHub's own, linked on the laptop) carries the
+command details and troubleshooting: load it whenever you touch a stack.
+Needs `gh` 2.90 or later and the extension (`gh extension install
+github/gh-stack`); all branches in the same repository, no forks.
+
+1. **Plan the layers first.** Foundation at the bottom, dependents above;
+   each layer one coherent change a reviewer reads quickly. Anything a layer
+   depends on is in that layer or below it. A layer that needs a long
+   explanation, or keeps growing, is split. Write the plan (layer → branch →
+   what it holds) in the issue's Status block Next field, and ask the
+   operator only when the boundaries are a product decision.
+2. **Build bottom-up, in your task's worktree:** `gh stack init <branch>`,
+   commit, then `gh stack add <next-branch>` per layer (from the top branch).
+   Test each layer before adding the next; never commit to the wrong layer.
+3. **Open it:** `gh stack submit --open` pushes every branch and opens the
+   PRs ready for review (never drafts), linked as one stack. Each PR gets its
+   own title and a short description of its layer, plus the repository's PR
+   template. The issue: every layer says `Refs #n`, and the top layer (or
+   the last layer that finishes the issue) says `Closes #n`; merging a
+   layer merges every layer below it.
+4. **Review fixes go in the layer that owns them:** `gh stack checkout
+   <branch>` (or `gh stack down`), commit the fix as a new commit, then
+   `gh stack rebase --upstack` and `gh stack push`, and check the layers
+   above still pass. This is the one place a push rewrites your branches:
+   `gh stack push` uses `--force-with-lease` on the rebased layers above. A
+   review finding is still answered with a new commit, never by rewriting
+   the layer that got it. Never force-push anything that isn't your own stack.
+5. **Keep it current:** when `main` moves or a layer merges, `gh stack sync`
+   (add `--prune` to drop merged local branches) rebases what is left. The
+   website's "Rebase stack" button does the same server-side, but its
+   commits are unsigned.
+6. **Merging is bottom-up, and stays the operator's.** Rules and CI of the
+   trunk apply to every layer; a layer merges only with every layer below it,
+   so all of them must have passed their reviews and checks. After a merge
+   GitHub retargets the next layer to the trunk by itself (no hand retarget,
+   and never delete a branch a layer still sits on). Golzak Bot doesn't yet
+   give upper layers a PR state or merge stacks with `/merge`
+   (sehangel/golzak-bot#64): until it does, say "ready for merge" on the top
+   PR, and the operator merges the stack from the merge box of the highest
+   layer to land. An agent runs `gh stack merge` only when the operator
+   authorized merging, never `gh pr merge` on a stack.
+7. **A finished stack is closed for good:** new work after its last merge is
+   a new stack.
 
 ### PR states: who acts next
 
@@ -838,8 +900,9 @@ repositories at once.
   - unblock issues whose blockers closed, and close epics whose children
     are all closed;
   - keep stage and priority honest: a P0 or P1 is never `status:backlog`
-    (backlog means not prioritized: move it to `status:todo`, or lower the
-    priority with the reason); when open P1s outnumber what can start next
+    (backlog means not scheduled yet: move it to `status:todo`, or lower the
+    priority with the reason; Golzak Bot moves it to `status:todo` where it
+    runs); when open P1s outnumber what can start next
     (more than about 10), re-triage them, most recently touched first, so
     P1 still means "next up";
   - fix label drift: every open issue has exactly one `status:*` and one
