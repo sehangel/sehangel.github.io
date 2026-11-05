@@ -182,7 +182,9 @@ purpose, or moved to an open issue where some of them still matter.
 - **Before-and-after evidence on the issue.** The last comment shows the
   same check before and after the change ("Evidence, QA and production
   tests"), and what was delivered (PR, deploy). A close with no comment
-  leaves the next agent nothing to verify.
+  leaves the next agent nothing to verify. Screenshots, GIFs and logs go
+  on the repository's add-only `qa-evidence` branch and are embedded from
+  there (the `qa-evidence` skill, synced next to this one).
 - **Dependents and the epic.** The issues it blocks lose `blocked` with
   the close (the label bot does it; without one, do it yourself: "Relations").
   Close the epic when this was its last open sub-issue.
@@ -383,6 +385,14 @@ is on it, and every agent asks the same way:
 
 Name the operator in Open only for an ask: a field that waits on someone
 else names them, and one with nothing open says `none`.
+
+### Shared devices: the phone queue
+
+The operator's test phones are shared by every repository and every agent.
+Before any touch of one (adb, an install, a screenshot), follow the
+`phone-queue` skill (synced next to this one): the queue is
+sehangel/Vantom-VPN#226 for every agent, and Claude Code sessions also
+message each other.
 
 ### PR states: who acts next
 
