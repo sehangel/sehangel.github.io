@@ -384,6 +384,14 @@ is on it, and every agent asks the same way:
 Name the operator in Open only for an ask: a field that waits on someone
 else names them, and one with nothing open says `none`.
 
+### Shared devices: the phone queue
+
+The operator's test phones are shared by every repository and every agent.
+Before any touch of one (adb, an install, a screenshot), follow the
+`phone-queue` skill (synced next to this one): the queue is
+sehangel/Vantom-VPN#226 for every agent, and Claude Code sessions also
+message each other.
+
 ### PR states: who acts next
 
 Golzak Bot gives every open PR into the default branch at most one label:
