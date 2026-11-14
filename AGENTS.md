@@ -48,4 +48,8 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
 - Rules in this file, the profile or a repo SOP may be stricter than the
   skill, never looser. Never put secrets or personal data in an issue.
 
+## Code comments (hard rule)
+
+Comments in source code are banned. Every agent follows this rule.
+
 <!-- kanban-sync:end -->
