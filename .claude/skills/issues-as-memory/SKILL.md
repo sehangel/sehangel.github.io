@@ -175,10 +175,14 @@ Before closing work as completed (by hand, or by merging a PR that says
 the work (see "Backlog hygiene"); its unfinished items are dropped on
 purpose, or moved to an open issue where some of them still matter.
 
-- **Nothing left unticked.** Every checklist item in the issue is ticked,
-  or moved, with a link, to an open issue (the follow-up issue of the area,
-  or a new one). A PR that leaves part of an issue undone says `Refs`, not
-  `Closes`.
+- **Nothing left unticked**, in the body or in any comment ("One
+  checklist, in the body"). Every box is ticked, or struck and moved, with
+  a link, to an open issue (the follow-up issue of the area, or a new one).
+  `open_boxes <n>` ("Commands") lists what is left; it must print nothing.
+  A PR that leaves part of an issue undone says `Refs`, not `Closes`.
+  Golzak Bot reopens an issue closed as completed with a box still open,
+  on the stage it had, and lists the boxes; after three such reopens it
+  leaves the issue closed with a note.
 - **Before-and-after evidence on the issue.** The last comment shows the
   same check before and after the change ("Evidence, QA and production
   tests"), and what was delivered (PR, deploy). A close with no comment
@@ -963,6 +967,24 @@ An issue whose feed passed about 30 comments gets its block rewritten as the
 summary of everything so far, ending
 `Summary through <link to the latest comment it covers>`, so a reader can skip the older comments.
 
+### One checklist, in the body
+
+An issue's work is one checklist, in its body (a `## To do` section under
+the Status block), edited in place as the work moves. There is no second
+list.
+
+- **A comment never carries a box** (`- [ ]` or `- [x]`). A hand-over says
+  what was done, with its evidence; what is left is the body's list,
+  edited in the same step. Lists kept in comments go stale: each hand-over
+  restated "what is left" as a new checklist, nobody went back to tick the
+  older ones, and closed issues said work was left when it was done.
+- **A box is settled** when it is ticked, where it was done
+  (`- [x] Deploy (#41, /healthz 200)`), or struck with where it went or why
+  it was dropped (`- [ ] ~~Dark mode~~ moved to #57`).
+- **Boxes that don't count:** in a fenced code block, an HTML comment or a
+  quote (examples and templates), in a bot's issue or comment, and in an
+  epic (its sub-issues are its list).
+
 ### The feed: one comment per thing that matters
 
 Comments are the issue's log. Each one stands on its own and is one of:
@@ -970,8 +992,9 @@ Comments are the issue's log. Each one stands on its own and is one of:
 - **a decision**, with why, and why not the other option (an operator
   decision quotes the operator);
 - **evidence**: before and after ("Evidence, QA and production tests");
-- **a stage change** or hand-over: what was done, what is left, the state
-  of anything shared or temporary (a flag, a device, a test server);
+- **a stage change** or hand-over: what was done, what is left (named in
+  prose, kept as the body's checklist: "One checklist, in the body"), the
+  state of anything shared or temporary (a flag, a device, a test server);
 - **an audit finding**: what was checked, how, and what it showed;
 - **a blocker**: what blocks it and who unblocks it;
 - **a lesson**: what went wrong and the rule that now prevents it.
@@ -1038,6 +1061,41 @@ gh issue list -R $R --state closed --limit 300 --json number,stateReason,labels 
   '.[] | select(.stateReason == "COMPLETED" and ([.labels[].name] | index("status:done") | not)) | .number'
 # open status:review issues: check each still has an open PR
 gh issue list -R $R --state open --label status:review --limit 1000 --json number --jq '.[].number'
+```
+
+Before closing as completed, list the boxes still open: the same rules
+Golzak Bot applies ("One checklist, in the body"). Nothing printed means
+nothing stops the close:
+
+```bash
+open_boxes() {  # open_boxes <n>: unticked boxes in the body and in people's comments
+  local d="${TMPDIR:-/tmp}/boxes-$1"
+  mkdir -p "$d"
+  gh api "repos/$R/issues/$1" > "$d/issue.json"
+  gh api --paginate --slurp "repos/$R/issues/$1/comments?per_page=100" > "$d/comments.json"
+  python3 - "$d" <<'PY'
+import json, re, sys
+d = sys.argv[1]
+issue = json.load(open(f"{d}/issue.json"))
+comments = [c for page in json.load(open(f"{d}/comments.json")) for c in page]
+trusted = {"OWNER", "MEMBER", "COLLABORATOR"}
+fence = re.compile(r"^[ \t]*(([`~])\2{2,})[^\n]*\n.*?(?:^[ \t]*\1\2*[ \t]*$|\Z)", re.M | re.S)
+def boxes(text):
+    text = re.sub(r"<!--.*?-->", "", fence.sub("", text or ""), flags=re.S)
+    found = [m.strip() for m in re.findall(r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+\[ \][ \t]+(.+)$", text, re.M)]
+    return [b for b in found if not b.startswith("~~")]
+if any(label["name"] == "epic" for label in issue["labels"]):
+    sys.exit()
+out = []
+if issue["author_association"] in trusted and issue["user"]["type"] != "Bot":
+    out += [("body", b) for b in boxes(issue["body"])]
+for c in comments:
+    if c["user"]["type"] != "Bot" and c["author_association"] in trusted:
+        out += [(c["html_url"], b) for b in boxes(c["body"])]
+for where, b in out:
+    print(f"{b}  ({where})")
+PY
+}
 ```
 
 Watching your issues ("Watching your issues"): run it with your session
