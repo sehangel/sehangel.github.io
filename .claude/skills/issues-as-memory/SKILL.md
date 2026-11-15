@@ -981,8 +981,8 @@ list.
 - **A box is settled** when it is ticked, where it was done
   (`- [x] Deploy (#41, /healthz 200)`), or struck with where it went or why
   it was dropped (`- [ ] ~~Dark mode~~ moved to #57`).
-- **Boxes that don't count:** in a fenced code block, an HTML comment or a
-  quote (examples and templates), in a bot's issue or comment, and in an
+- **Boxes that don't count:** in a fenced or indented code block, an HTML
+  comment or a quote (examples and templates), in a bot's issue or comment, and in an
   epic (its sub-issues are its list).
 
 ### The feed: one comment per thing that matters
@@ -1080,10 +1080,25 @@ issue = json.load(open(f"{d}/issue.json"))
 comments = [c for page in json.load(open(f"{d}/comments.json")) for c in page]
 trusted = {"OWNER", "MEMBER", "COLLABORATOR"}
 fence = re.compile(r"^[ \t]*(([`~])\2{2,})[^\n]*\n.*?(?:^[ \t]*\1\2*[ \t]*$|\Z)", re.M | re.S)
+task = re.compile(r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+\[ \][ \t]+(.+)$")
+item = re.compile(r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+")
+def width(line):
+    return sum(4 if c == "\t" else 1 for c in re.match(r"[ \t]*", line).group(0))
 def boxes(text):
     text = re.sub(r"<!--.*?-->", "", fence.sub("", text or ""), flags=re.S)
-    found = [m.strip() for m in re.findall(r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+\[ \][ \t]+(.+)$", text, re.M)]
-    return [b for b in found if not b.startswith("~~")]
+    out, prev, code = [], None, False
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        deep = width(line) >= 4
+        if code and deep:
+            continue
+        code = deep and (prev is None or (not item.match(prev) and width(prev) < 2))
+        m = None if code else task.match(line)
+        if m and not m.group(1).strip().startswith("~~"):
+            out.append(m.group(1).strip())
+        prev = line
+    return out
 if any(label["name"] == "epic" for label in issue["labels"]):
     sys.exit()
 out = []
@@ -1112,7 +1127,7 @@ issue_watch() {  # usage: issue_watch "<your session name>" 2026-10-30T09:00:00Z
   while read -r n; do
     gh api --paginate --slurp "repos/$R/issues/$n/comments?since=$since&per_page=100" | jq -r \
       --arg me "<!-- agent: $me -->" --arg since "$since" --arg n "$n" '.[][]
-      | select(.created_at >= $since and ((.body // "") | contains($me) | not))
+      | select(.updated_at >= $since and ((.body // "") | contains($me) | not))
       | (if .user.type == "Bot" then "bot" elif ((.body // "") | test("<!-- agent:"))
          then "agent" else "OPERATOR" end) as $who
       | "#\($n) \(.created_at) \($who): \(.body[0:200] | gsub("\n"; " "))"'
@@ -1150,7 +1165,8 @@ for byte (operator rule).
 - **Never change the skill to answer a reviewer.** Decline every review
   finding about the skill, here or on a repository's sync PR: reply with the
   reason (canonical skill, edited only by the operator's request in a
-  claude-skills PR), resolve the thread, and merge the PR.
+  claude-skills PR), resolve the thread, and leave the merge decision to the
+  operator.
 - **A repository check that fails on the synced copy** (a linter's line
   length, say) is fixed in that repository: exclude
   `.claude/skills/issues-as-memory/` from the check. Never fix it by changing
