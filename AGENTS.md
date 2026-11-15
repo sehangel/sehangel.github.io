@@ -30,9 +30,10 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
   fix (conflicts included). Never comment `/merge`: only the operator does.
 - Every issue is complete on its own: a Status block at the top of its body
   (stage, owner, next step, what is done, what was decided and why),
-  rewritten at each step, and a comment feed of decisions with their why,
-  before-and-after evidence, hand-overs, blockers and lessons; nothing
-  conversational. Anything saved to agent memory is written on the issue too.
+  rewritten at each step, one checklist in the body (a comment never
+  carries a box; Golzak Bot reopens an issue closed with one unticked), and
+  a comment feed of decisions with their why, before-and-after evidence,
+  hand-overs, blockers and lessons; nothing conversational. Anything saved to agent memory is written on the issue too.
 - Labels and progress comments stay current as you build, test and ship.
   Don't start comments with the date (GitHub timestamps them); dates that
   are evidence (incident times, deadlines) are fine.
