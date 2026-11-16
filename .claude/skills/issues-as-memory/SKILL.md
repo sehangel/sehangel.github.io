@@ -323,13 +323,20 @@ many agents run:
   it" while another session is active: then take the next item in the ready
   queue. Without the bot, comment `Owner: <session>, worktree <path>` and
   re-read: the earliest "Owner:" after the latest "Released:" holds it.
+- **The Owner field is a claim too.** Writing a session into the Status
+  block's Owner on a `status:todo` issue moves it to `status:in-progress`
+  (Golzak Bot); moving it back to `status:todo` clears the Owner. The label
+  is the truth: never name an Owner on work you are not doing now, and
+  never leave `status:in-progress` on work nobody is doing.
 - **Release on stop:** comment `/release` (without the bot:
   `Released: <state>`) with the state on the next lines (what is
   mid-flight, temporary production changes, devices held) when you stop
   before the issue is done. A session that ends mid-task always releases.
-- **Stale owners:** the bot releases an issue in progress with no activity
-  for 12 hours and no open PR, and a `/claim` takes over an owner idle past
-  that. Without the bot, an owner who has posted nothing for 2 hours and is
+- **Stale owners:** the bot releases an issue in progress (owned or not)
+  with no activity for 12 hours and no open PR in any repository, and
+  clears a to-do issue's Owner idle that long; a `/claim` takes over an
+  owner idle past that. Blocked issues, issues waiting on the operator and
+  the operator's own issues are never released. Without the bot, an owner who has posted nothing for 2 hours and is
   no longer running (the profile says how to check, e.g. the session list)
   may be taken over: post `Taken over from <owner>: <state found>` first.
   Either way, restore any temporary production change the old owner left.
@@ -337,15 +344,21 @@ many agents run:
 ### The ready queue: where work is picked
 
 Golzak Bot keeps one closed, locked issue per repository labelled
-`ready-queue`, rewritten after every change:
+`ready-queue`, rewritten after every change. It lists every open issue,
+by its labels:
 - **Waiting on you**: every issue waiting on the operator
   (`waiting:operator`), with its ask: the operator's one list ("Asking the
   operator");
 - what waits for the operator's `/merge`;
-- **Ready to take**: free, unblocked work, P0 first, then oldest;
-- who works on what;
-- the PRs waiting on their agent;
-- what is blocked.
+- **Ready to take**: `status:todo` work, unblocked, P0 first, then
+  oldest. A to-do issue that names an Owner comes after the free ones,
+  marked as held by that owner: ask on the issue before taking it;
+- **In progress**: `status:in-progress`, with its owner;
+- the PRs waiting on their agent, review, QA or docs, what is blocked, and
+  the backlog.
+
+A page too long for one issue body goes on in comments on the same issue,
+and the body says how many follow.
 
 A session that was given a task works that task first (resume it after a
 summary). The queue is where a session with no task of its own, or one that
@@ -357,6 +370,7 @@ operator's OK. `/claim` what you take. Never comment on the queue issue.
 ```bash
 q=$(gh issue list -R $R --label ready-queue --state all --json number --jq '.[0].number')
 gh issue view $q -R $R --json body --jq .body
+gh api "repos/$R/issues/$q/comments?per_page=100" --paginate --jq '.[].body'  # the rest, on a long page
 ```
 
 ### Asking the operator: `waiting:operator` (hard rule)
