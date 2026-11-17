@@ -180,6 +180,8 @@ purpose, or moved to an open issue where some of them still matter.
   a link, to an open issue (the follow-up issue of the area, or a new one).
   `open_boxes <n>` ("Commands") lists what is left; it must print nothing.
   A PR that leaves part of an issue undone says `Refs`, not `Closes`.
+  At a `Closes` merge, the kind's last box is the one exception ("The
+  checklist starts with its kind's boxes").
   Golzak Bot reopens an issue closed as completed with a box still open,
   on the stage it had, and lists the boxes; after three such reopens it
   leaves the issue closed with a note.
@@ -600,7 +602,9 @@ after a message to the owner.
    covers the task, check the work isn't done or already in a PR ("Reading
    an issue without wasting tokens", step 4), and `/claim` it ("Owning an
    issue"). Golzak Bot then moves it to `status:in-progress`; without the
-   bot, move the label yourself ("Labels").
+   bot, move the label yourself ("Labels"). Then name its kind and write
+   that kind's boxes into its body ("The checklist starts with its kind's
+   boxes").
 3. **While working**: at every meaningful step (built, tested, deployed, found a
    blocker, decided) add a feed comment and rewrite the Status block ("What
    an issue holds"): what changed, evidence (command + result,
@@ -692,7 +696,8 @@ every push to an open PR, and a bug found there is paid for again on each
 fix round. A change also moves after it was first checked: review fixes
 and the merge itself can break it. So the session that owns the issue
 proves the change at each of these points and writes each result on the
-issue. This adds no label and no stage: it is what must be true before an
+issue, ticking the boxes its kind put there ("The checklist starts with
+its kind's boxes"). This adds no label and no stage: it is what must be true before an
 issue leaves the stages it already has.
 
 **How much proof a change needs.** It follows what the change can break,
@@ -1099,7 +1104,8 @@ are still read; rewrite them as the table when you next update them.
 
 Keep it under 15 lines; details live in the feed, linked from here. Edit only
 the block (read the body, replace the block, write it back), never the rest
-of the body that someone else wrote:
+of the body that someone else wrote (its checklist apart, which is its
+owner's):
 
 ```bash
 gh issue view $n -R $R --json body --jq .body > "${TMPDIR:-/tmp}/body-$n.md"
@@ -1128,6 +1134,64 @@ list.
 - **Boxes that don't count:** in a fenced or indented code block, an HTML
   comment or a quote (examples and templates), in a bot's issue or comment, and in an
   epic (its sub-issues are its list).
+
+### The checklist starts with its kind's boxes
+
+Whoever claims an issue (Loop, step 2) writes into its body what will
+prove the work, so anyone who reads the issue sees what is owed. Above
+the checklist goes a line `Kind: <kind>`. The kind is `text nobody runs`
+or `text agents follow` when nothing in the change runs ("Prove the
+change" tells them apart); otherwise `bug`, `feature` or `refactor`, or
+several of those (`Kind: bug, refactor`). Then each named kind's boxes go
+into the checklist once, in these words, the same in every repository:
+
+```text
+bug
+- [ ] Bug shown to be real (logs or a reproduction), check posted before the first edit
+- [ ] Cause named
+- [ ] Cause fixed, the same check passes
+feature
+- [ ] Done written as checks, posted before the first edit
+- [ ] Built, the checks pass
+refactor
+- [ ] Today's behaviour pinned by a check, posted before the first edit
+- [ ] Structure changed, the pin still passes
+bug, feature and refactor then end with
+- [ ] Proven before the PR: a fresh verifier's PASS, with its commit
+- [ ] PR opened
+- [ ] Review findings settled, a mistake seen twice filed as a check
+- [ ] Proven after the merge: the same check passes on what shipped
+text agents follow
+- [ ] Text written
+- [ ] Cold read by a fresh reader, findings answered
+- [ ] PR opened
+- [ ] After the merge: where the text is now loaded from, said on the issue
+```
+
+`text nobody runs` has no boxes of its kind. Each box is a step of "Prove
+the change", which says how it is done.
+
+- **One list.** The work's own steps sit among these boxes. A box already
+  there for the same step takes the kind's words, and keeps its tick only
+  if what was done meets them. The checklist is the owner's to write, also
+  in an issue someone else opened.
+- **Ticking** keeps the kind's words (`- [x] Cause named (<comment link>)`);
+  with several PRs, a box is ticked when the last PR has it. A box that
+  does not apply (no PR for a live change) is struck with the reason,
+  never deleted ("One checklist, in the body").
+- **The last box** waits for the merge (with no PR, for the live change),
+  so a `Closes` merge closes the issue with it open: the one box that may
+  be. The issue then comes back open (Golzak Bot reopens it; without the
+  bot, reopen it) and waits on `status:qa` until the proof is posted and
+  the box ticked. Where a follow-up or QA-queue issue carries the check
+  (Loop, step 5), strike the box with that issue's link before the merge
+  instead.
+- **No kind:** an epic, a queue or log issue, an area's follow-ups issue,
+  and work that changes nothing (an audit, a question, an operator's
+  step). Their checklist is their own.
+- A wrong kind is corrected, with a comment saying why. An issue claimed
+  before this rule gets its kind and boxes at its next Status rewrite,
+  ticked for what is done.
 
 ### The feed: one comment per thing that matters
 
