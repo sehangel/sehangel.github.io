@@ -700,11 +700,17 @@ not its size in lines:
 
 - **Text nobody runs** (prose docs, comments, generated files): no
   verifier, and the diff is the proof.
-- **Anything that runs or steers a run** (code, config, workflows,
-  migrations, infrastructure, and instruction files agents follow): all
-  five steps below.
-- **A P0 fix that cannot wait** may open and merge first; the verdict and
-  the proof follow in the same session, and the issue says so.
+- **Text agents follow** (a rule, a skill, a prompt; a file that also
+  holds a script is code): nothing can run, so its verdict is a cold
+  read, the one exception to "it runs something" in step 2. A fresh
+  reader with none of your context gets only the diff and the file, and
+  is asked for contradictions, loopholes and what cannot be followed. Its
+  findings are answered, and the PR body says
+  `Pre-PR verdict: PASS @<short sha> (cold read by <who>: <what it found>)`.
+  The diff is the before and after. After the merge, one line on the
+  issue says where the text is now loaded from.
+- **Anything that runs** (code, config, workflows, migrations,
+  infrastructure): the five steps below.
 
 1. **Know the kind of work, and capture its check first**
    (`status:in-progress`). The check is one thing that can pass or fail: a
@@ -722,16 +728,25 @@ not its size in lines:
    First run the repository's own local checks, where its profile names
    them (with a silent profile: the tests of what changed, lint and types;
    never a whole suite on a machine other sessions share, unless the
-   profile says how such runs wait their turn). Then a fresh verifier: a
-   subagent with none of your context (a cheaper model is enough, for
-   example `sonnet`); in a harness without subagents, another vendor's
-   reviewer or a new session. Give it the diff, the issue and the check,
-   and none of your reasoning.
+   profile says how such runs wait their turn). A check that cannot run
+   on this machine, or that the profile keeps off it (a whole suite, a
+   coverage or mutation budget, a lab that needs CI's network), is left
+   to CI on the PR, and the verdict line names what was left. Then a fresh
+   verifier: a subagent with none of your context (a cheaper model is
+   enough, for example `sonnet`). Give it the diff, the issue and the
+   check, and none of your reasoning.
+   - **It is not one more agent.** Where a repository already asks for a
+     fresh reviewer before a PR, that reviewer is the verifier, as long as
+     it had none of your context, ran the check itself and ends with PASS
+     or FAIL. A session that has no subagents, or was told to start none,
+     asks another vendor's reviewer (for example `codex review`) to run
+     the check, or uses a new session.
    - **It runs something.** The check of step 1 on the branch, the changed
      command, the tests of the change. Reading the diff is a review, not a
      verdict. Where nothing can run without touching what is shared (most
-     infrastructure), it runs the dry run, the syntax check or the plan,
-     and its verdict says that is all it ran.
+     infrastructure, and a workflow whose jobs run only on CI's runners),
+     it runs the dry run, the syntax check or the plan, and its verdict
+     says that is all it ran. That is expected there, not a shortfall.
    - **It touches nothing shared:** no production, no deploy, no shared
      device, no live account. Those checks come after the merge, and the
      pre-PR verdict never stands in for them.
@@ -744,11 +759,17 @@ not its size in lines:
      own verdict, on its own diff.
    - Post the verdict on the issue, and in the PR body on a line of its
      own: `Pre-PR verdict: PASS @<short sha> (<who ran it>: <what was run>)`.
+     When the real check needs something shared, the line says what is
+     still owed:
+     `Pre-PR verdict: PASS @1a2b3c4 (sonnet: unit tests, build; phone check owed after merge)`.
      A change that needs none says `Pre-PR verdict: N/A (<why>)`, so
      "exempt" never looks like "forgot". A job that cannot give one (a
      bot's PR, an automated fix, a session with no subagents and no other
      reviewer) writes N/A with the reason, and whoever drives that PR to
-     merge gets the verdict first.
+     merge gets the verdict first. So does whoever drives a PR another
+     agent wrote. A PR opened before this rule owes nothing for what is
+     already pushed: the rule applies from its next push that changes
+     what runs.
    - The verifier is the owner's helper, not a hand-over: the session that
      owns the issue still owns its QA.
 3. **A finding comes with what shows it**, from any reviewer, before the PR
@@ -767,12 +788,18 @@ not its size in lines:
    check, CI on the merge commit is the proof: say so on that line. Only
    then does the issue leave `status:qa`. A FAIL is a new `bug` issue,
    linked; the issue that carries the check stays open, or is reopened.
-   The proof is owed for issues a PR delivers (`Closes`); an issue it only
-   `Refs` gets it from the PR that finishes it, and an epic has none.
+   The proof is owed where the check of step 1 was posted, once the work
+   it proves is merged, whichever keyword the PR used: an issue kept open
+   after a `Refs` PR owes it too. While more PRs are still to come for
+   that issue, it is owed when the last one merges. An epic has none.
 5. **A finding seen twice becomes a check.** When reviewers or QA find the
    same kind of mistake a second time, file an issue to make it impossible
    or caught by a machine (a type, a lint, a test), and link both findings.
    A written rule is the last resort: nothing fails when it is skipped.
+
+**A P0 fix that cannot wait** may open and merge first. The verdict and
+the proof follow at once, from the session that owns the issue, and the
+issue says so.
 
 Where a repository keeps more (a local gate, how its app is launched for
 a verifier, a device queue), its profile says so ("Deploy and
@@ -1296,6 +1323,13 @@ To refine the method:
 2. After it merges, run `python3 issues-as-memory/sync/sync.py` from a
    claude-skills checkout. It skips repositories already in sync and updates
    the open sync PR instead of opening a second one.
+3. Tell the sessions that are running. A session loads this skill once, so
+   a change reaches it only at its next start or context summary. The
+   session that made the change messages each running session it can
+   reach, after the merge: which section changed, and to re-read it
+   before its next PR or push. The first hour of "Prove the change"
+   showed why: no running session had read the new section until it was
+   asked.
 
 A lesson that only applies to one repository goes in that repository's
 `.claude/kanban-profile.md` instead.
