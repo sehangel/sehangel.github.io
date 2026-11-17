@@ -711,7 +711,7 @@ not its size in lines:
   reader with none of your context gets only the diff and the file, and
   is asked for contradictions, loopholes and what cannot be followed. Its
   findings are answered, and the PR body says
-  `Pre-PR verdict: PASS @<short sha> (cold read by <who>: <what it found>)`.
+  `Pre-PR verdict: PASS at <short sha> (cold read by <who>: <what it found>)`.
   The diff is the before and after. After the merge, one line on the
   issue says where the text is now loaded from.
 - **Anything that runs** (code, config, workflows, migrations,
@@ -758,15 +758,25 @@ not its size in lines:
    - It answers PASS or FAIL with what it ran and what it saw. On FAIL,
      fix and ask again; after two FAIL rounds, stop and rework the change
      as a whole before a third.
+   - **Before the PR, the rounds end.** The verifier, and each pre-PR
+     reviewer the repository asks for, runs once. Fix what they show, then
+     one more verdict on the fixed commit (a FAIL there still follows the
+     rule above). Beyond that, ask no reviewer for another round before the
+     PR: each costs tokens, the findings shrink to corner cases, and the
+     PR's own reviewers will see the change once it is open. A finding that
+     was shown is fixed; only one nobody could show, or a minor one, may be
+     left, and the PR body names it.
    - **A verdict belongs to one commit.** A later push that changes what
      runs needs a new one; a push that only merges the base branch, or
      changes only text nobody runs, keeps it. In a stack, each PR has its
      own verdict, on its own diff.
    - Post the verdict on the issue, and in the PR body on a line of its
-     own: `Pre-PR verdict: PASS @<short sha> (<who ran it>: <what was run>)`.
+     own: `Pre-PR verdict: PASS at <short sha> (<who ran it>: <what was run>)`.
+     The word is "at", never `@`: GitHub turns `@` and a short sha into a
+     mention when an account has that name, and notifies a stranger.
      When the real check needs something shared, the line says what is
      still owed:
-     `Pre-PR verdict: PASS @1a2b3c4 (sonnet: unit tests, build; phone check owed after merge)`.
+     `Pre-PR verdict: PASS at 1a2b3c4 (sonnet: unit tests, build; phone check owed after merge)`.
      A change that needs none says `Pre-PR verdict: N/A (<why>)`, so
      "exempt" never looks like "forgot". A job that cannot give one (a
      bot's PR, an automated fix, a session with no subagents and no other
@@ -788,7 +798,8 @@ not its size in lines:
    names: Loop, step 5), run the check of step 1 on the merged build or
    the deploy, now with the live, device or production checks step 2 left
    out. Post one comment whose first line is
-   `Post-merge proof: PASS @<merge commit or deploy id>` (or `FAIL`),
+   `Post-merge proof: PASS at <merge commit or deploy id>` (or `FAIL`; one
+   word after "at", with no space in it),
    followed by the before-and-after table. Where nothing live exists to
    check, CI on the merge commit is the proof: say so on that line. Only
    then does the issue leave `status:qa`. A FAIL is a new `bug` issue,
