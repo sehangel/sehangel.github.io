@@ -408,7 +408,8 @@ else names them, and one with nothing open says `none`.
 
 The operator's test phones are shared by every repository and every agent.
 Before any touch of one (adb, an install, a screenshot), follow the
-`phone-queue` skill (synced next to this one): the queue is
+laptop-wide `phone-queue` skill (`~/.claude/skills/phone-queue`, never
+copied into a repository): the queue is
 sehangel/Vantom-VPN#226 for every agent, and Claude Code sessions also
 message each other.
 
