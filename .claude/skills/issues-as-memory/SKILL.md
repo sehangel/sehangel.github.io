@@ -605,12 +605,16 @@ after a message to the owner.
    blocker, decided) add a feed comment and rewrite the Status block ("What
    an issue holds"): what changed, evidence (command + result,
    commit SHA, URL), and what is next. This is what a future agent will read.
+   Before the first edit, write on the issue the check that will prove the
+   change, in the order its kind of work asks for ("Prove the change").
 4. **New work discovered** (follow-ups, bugs, decisions the operator owes,
    anything you found in passing): file it at once by "Filing work" --
    search first, update a match, open a new issue only when nothing matches
    -- and add it to its epic as a sub-issue.
 5. **PR**: one branch per task in its own worktree (unless the repo's rules
-   allow direct commits). Move the issues the PR delivers (`Closes`) to
+   allow direct commits). Open it only once the change has its pre-PR
+   verdict ("Prove the change"), and put the verdict line in the body.
+   Move the issues the PR delivers (`Closes`) to
    `status:review`; issues it only references (`Refs`) keep the status that
    matches their remaining work. The PR body references **every** issue the
    PR handles or touches, one keyword per line, so nothing is left open by
@@ -659,7 +663,8 @@ after a message to the owner.
    the `Closes` issues closed and move them from `status:review` to
    `status:done` (GitHub doesn't change labels). Move issues that wait on
    verification to `status:qa` until verified, then `status:done` (or the
-   profile's next stage) and close with the evidence. Other `Refs` issues
+   profile's next stage) and close with the evidence: the same check, run
+   again on what shipped ("Prove the change", step 4). Other `Refs` issues
    keep a stage label that matches what remains (e.g. `status:todo` or
    `status:in-progress`, never `status:review` once no PR for them is
    open), plus `blocked` when waiting on the operator or an external party,
@@ -679,6 +684,99 @@ after a message to the owner.
 8. **Before ending a turn**: every issue you touched has a current label and a
    comment saying where it stands, including the ones you closed (a closed
    issue still on `status:review` is drift: see the queries in "Commands").
+
+## Prove the change: before the PR and after the merge (hard rule)
+
+Everything pushed to GitHub costs: CI runs, reviewers spend tokens on
+every push to an open PR, and a bug found there is paid for again on each
+fix round. A change also moves after it was first checked: review fixes
+and the merge itself can break it. So the session that owns the issue
+proves the change at each of these points and writes each result on the
+issue. This adds no label and no stage: it is what must be true before an
+issue leaves the stages it already has.
+
+**How much proof a change needs.** It follows what the change can break,
+not its size in lines:
+
+- **Text nobody runs** (prose docs, comments, generated files): no
+  verifier, and the diff is the proof.
+- **Anything that runs or steers a run** (code, config, workflows,
+  migrations, infrastructure, and instruction files agents follow): all
+  five steps below.
+- **A P0 fix that cannot wait** may open and merge first; the verdict and
+  the proof follow in the same session, and the issue says so.
+
+1. **Know the kind of work, and capture its check first**
+   (`status:in-progress`). The check is one thing that can pass or fail: a
+   command and its output, a test, a screen, a stored value, a
+   measurement. Run it and post it on the issue before the first edit: it
+   is the "before" of the evidence rule ("Evidence, QA and production
+   tests"), the same artifact.
+   - **A bug:** show it is real (in the logs, or by making it happen), find
+     the cause, fix the cause and not the symptom, and see the same check
+     pass.
+   - **A feature:** say what done means as checks, build it, run them.
+   - **A refactor:** pin today's behaviour with a check, change the
+     structure, and see the pin still pass.
+2. **Before the PR opens: a verdict from someone who did not write it.**
+   First run the repository's own local checks, where its profile names
+   them (with a silent profile: the tests of what changed, lint and types;
+   never a whole suite on a machine other sessions share, unless the
+   profile says how such runs wait their turn). Then a fresh verifier: a
+   subagent with none of your context (a cheaper model is enough, for
+   example `sonnet`); in a harness without subagents, another vendor's
+   reviewer or a new session. Give it the diff, the issue and the check,
+   and none of your reasoning.
+   - **It runs something.** The check of step 1 on the branch, the changed
+     command, the tests of the change. Reading the diff is a review, not a
+     verdict. Where nothing can run without touching what is shared (most
+     infrastructure), it runs the dry run, the syntax check or the plan,
+     and its verdict says that is all it ran.
+   - **It touches nothing shared:** no production, no deploy, no shared
+     device, no live account. Those checks come after the merge, and the
+     pre-PR verdict never stands in for them.
+   - It answers PASS or FAIL with what it ran and what it saw. On FAIL,
+     fix and ask again; after two FAIL rounds, stop and rework the change
+     as a whole before a third.
+   - **A verdict belongs to one commit.** A later push that changes what
+     runs needs a new one; a push that only merges the base branch, or
+     changes only text nobody runs, keeps it. In a stack, each PR has its
+     own verdict, on its own diff.
+   - Post the verdict on the issue, and in the PR body on a line of its
+     own: `Pre-PR verdict: PASS @<short sha> (<who ran it>: <what was run>)`.
+     A change that needs none says `Pre-PR verdict: N/A (<why>)`, so
+     "exempt" never looks like "forgot". A job that cannot give one (a
+     bot's PR, an automated fix, a session with no subagents and no other
+     reviewer) writes N/A with the reason, and whoever drives that PR to
+     merge gets the verdict first.
+   - The verifier is the owner's helper, not a hand-over: the session that
+     owns the issue still owns its QA.
+3. **A finding comes with what shows it**, from any reviewer, before the PR
+   or on it: the command and its output, a failing test, or the exact input
+   and the path through the code that breaks. Ask for that. A finding that
+   is shown is fixed. One nobody could show is recorded as unproven, with
+   what was tried to show it, and is never fixed blind.
+4. **After the merge: the same check again, on what shipped.** On the
+   issue that carries the check (the delivered issue where it stays open
+   on `status:qa`, otherwise the follow-up or QA-queue issue the PR body
+   names: Loop, step 5), run the check of step 1 on the merged build or
+   the deploy, now with the live, device or production checks step 2 left
+   out. Post one comment whose first line is
+   `Post-merge proof: PASS @<merge commit or deploy id>` (or `FAIL`),
+   followed by the before-and-after table. Where nothing live exists to
+   check, CI on the merge commit is the proof: say so on that line. Only
+   then does the issue leave `status:qa`. A FAIL is a new `bug` issue,
+   linked; the issue that carries the check stays open, or is reopened.
+   The proof is owed for issues a PR delivers (`Closes`); an issue it only
+   `Refs` gets it from the PR that finishes it, and an epic has none.
+5. **A finding seen twice becomes a check.** When reviewers or QA find the
+   same kind of mistake a second time, file an issue to make it impossible
+   or caught by a machine (a type, a lint, a test), and link both findings.
+   A written rule is the last resort: nothing fails when it is skipped.
+
+Where a repository keeps more (a local gate, how its app is launched for
+a verifier, a device queue), its profile says so ("Deploy and
+verification"). A repository rule may ask for more, never for less.
 
 ## Checkpoints (hard rule)
 
@@ -714,7 +812,8 @@ expects the board to keep moving without having to say "keep working":
   the count is below the limit) and walk every issue that is not `blocked`
   and not waiting on the operator. For each one in scope (see below): work it
   now yourself, or record on the issue why it cannot move (with `blocked` +
-  who unblocks it). Don't spawn sub-agents just to clear the board.
+  who unblocks it). Don't spawn sub-agents just to clear the board (the verifier
+  of "Prove the change" is a check, not that).
 - **In scope** means: the session's request, issues you or the session own,
   and the queue the operator has authorized (standing instructions or the
   profile). An open issue on its own is not permission to start
@@ -833,14 +932,17 @@ repositories at once.
 ### Evidence, QA and production tests
 
 - **Every change is proven before and after (hard rule).** Proof is a
-  comparison, not a single "it works":
+  comparison, not a single "it works", and "after" is checked twice: on
+  the branch before the PR opens, and again on what shipped ("Prove the
+  change"):
 
   1. **Capture "before" first,** before editing anything: the same
      screenshot, command output, query, measurement or log line that shows
      the problem (or, for a new feature, that it is absent). Once the code
      changes, the "before" is gone.
   2. **Run the same check after,** under the same conditions (same device,
-     account, data, command, query window), on the new build or deploy.
+     account, data, command, query window): on the branch for the pre-PR
+     verdict, then on the new build or deploy once it is merged.
   3. **Post both side by side** in one comment, naming the build, commit or
      deploy each was taken on:
 
@@ -859,7 +961,7 @@ repositories at once.
   - a visual asset (icon, screenshot, rendered page, store image): the
     rendered old and new, side by side;
   - text-only docs: the diff is the before and after; link it, no
-    screenshot needed.
+    screenshot needed, and no verifier or post-merge comment.
 
   If "before" can no longer be captured (the change is already live), say
   so and use the last known state (an older build, a log, an earlier

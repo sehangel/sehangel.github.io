@@ -34,6 +34,11 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
   carries a box; Golzak Bot reopens an issue closed with one unticked), and
   a comment feed of decisions with their why, before-and-after evidence,
   hand-overs, blockers and lessons; nothing conversational. Anything saved to agent memory is written on the issue too.
+- A change that runs is proven before its PR opens (a fresh verifier that
+  did not write it runs it and gives PASS or FAIL; the PR body carries the
+  `Pre-PR verdict:` line) and again after the merge, on what shipped (a
+  `Post-merge proof:` comment), before the issue leaves `status:qa`: the
+  skill's "Prove the change".
 - Labels and progress comments stay current as you build, test and ship.
   Don't start comments with the date (GitHub timestamps them); dates that
   are evidence (incident times, deadlines) are fine.
