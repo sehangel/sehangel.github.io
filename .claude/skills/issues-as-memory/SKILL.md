@@ -766,10 +766,26 @@ not its size in lines:
      PR's own reviewers will see the change once it is open. A finding that
      was shown is fixed; only one nobody could show, or a minor one, may be
      left, and the PR body names it.
-   - **A verdict belongs to one commit.** A later push that changes what
-     runs needs a new one; a push that only merges the base branch, or
-     changes only text nobody runs, keeps it. In a stack, each PR has its
-     own verdict, on its own diff.
+   - **A verdict belongs to one commit.** Whether a later push needs the
+     line renewed is decided by the files it changes: a reader, and the
+     bot that checks the line, can tell a prose file from a code file, not
+     a comment from code.
+     - Only a clean merge of the base branch, or only prose files
+       (documentation in Markdown, reStructuredText or AsciiDoc that no
+       agent follows): the line stays as it is.
+     - A file that runs, or text agents follow (a rule, a skill, a prompt,
+       an agents file, wherever agents read it from): the line is renewed
+       for the new commit.
+
+     Renewed means a new verdict on the new commit, with one exception.
+     When the push changed only comments that tell no tool anything, or
+     only generated files, nothing runs differently: the author names the
+     new commit on the line and says what changed since the verified one,
+     with no new run:
+     `Pre-PR verdict: PASS at <new short sha> (<who ran it>: <what was run> at <old short sha>; only comments changed since)`.
+     A comment that switches a check off or changes what a tool does (a
+     lint, coverage or type exemption, a shebang) is code, not a comment.
+     In a stack, each PR has its own verdict, on its own diff.
    - Post the verdict on the issue, and in the PR body on a line of its
      own: `Pre-PR verdict: PASS at <short sha> (<who ran it>: <what was run>)`.
      The word is "at", never `@`: GitHub turns `@` and a short sha into a
@@ -783,8 +799,8 @@ not its size in lines:
      reviewer) writes N/A with the reason, and whoever drives that PR to
      merge gets the verdict first. So does whoever drives a PR another
      agent wrote. A PR opened before this rule owes nothing for what is
-     already pushed: the rule applies from its next push that changes
-     what runs.
+     already pushed: the rule applies from its next push that changes a
+     file that runs, or text agents follow.
    - The verifier is the owner's helper, not a hand-over: the session that
      owns the issue still owns its QA.
 3. **A finding comes with what shows it**, from any reviewer, before the PR
