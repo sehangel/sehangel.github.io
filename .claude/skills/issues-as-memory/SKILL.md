@@ -495,6 +495,8 @@ Golzak Bot gives every open PR into the default branch at most one label:
   - every reviewer expected on it has passed:
     - **Codex** finished a review of the latest commit. After every fix push, comment `@codex review`, and again
       once a usage limit resets.
+    - **The pre-PR verdict** in the PR body stands for the latest commit, where the repository's bot checks it:
+      renew the line with every fix push ("Prove the change", step 2).
     - **Claude's code review** (one round per PR) finished a run, and its threads are resolved. A run that
       failed is re-run.
     - **The QA pass** (one round per PR, where the repo counts its verdicts) said SHIP. SHIP WITH EDITS or
@@ -703,7 +705,8 @@ issue leaves the stages it already has.
 **How much proof a change needs.** It follows what the change can break,
 not its size in lines:
 
-- **Text nobody runs** (prose docs, comments, generated files): no
+- **Text nobody runs** (prose docs; comments that tell no tool
+  anything; generated files other than a lockfile or a migration): no
   verifier, and the diff is the proof.
 - **Text agents follow** (a rule, a skill, a prompt; a file that also
   holds a script is code): nothing can run, so its verdict is a cold
@@ -730,31 +733,64 @@ not its size in lines:
    - **A refactor:** pin today's behaviour with a check, change the
      structure, and see the pin still pass.
 2. **Before the PR opens: a verdict from someone who did not write it.**
-   First run the repository's own local checks, where its profile names
-   them (with a silent profile: the tests of what changed, lint and types;
-   never a whole suite on a machine other sessions share, unless the
-   profile says how such runs wait their turn). A check that cannot run
-   on this machine, or that the profile keeps off it (a whole suite, a
-   coverage or mutation budget, a lab that needs CI's network), is left
-   to CI on the PR, and the verdict line names what was left. Then a fresh
-   verifier: a subagent with none of your context (a cheaper model is
-   enough, for example `sonnet`). Give it the diff, the issue and the
-   check, and none of your reasoning.
+   In this order, because every finding changes the code and changed code
+   needs its checks again: commit; the fresh verifier, and the reviewers
+   the repository's rules ask for before a PR (another vendor's review, an
+   advisor), on that commit; fix what they show; then the repository's own
+   checks, once, on the commit that will be pushed. Checks run before the
+   reviewers are run twice. A fix those checks then force is a later
+   commit like any other: the line is renewed for it (below).
+   - **The repository's checks are what its CI runs.** Run the one local
+     command the profile names for them. Where there is none, run the
+     steps of the CI workflow itself, not the commands a README lists: a
+     step CI has and you did not run is found by CI, after the PR opens.
+     One thing is never run that way: a whole suite on a machine other
+     sessions share, unless the profile says how such runs wait their
+     turn; there, run the tests of what changed. A check that cannot run
+     on this machine, or that the profile keeps off it (a whole suite, a
+     coverage or mutation budget, a lab that needs CI's network, a build
+     for another system), is left to CI on the PR, and the verdict line
+     names what was left.
+   - **The fresh verifier** is a subagent with none of your context (a
+     cheaper model is enough, for example `sonnet`). Its brief holds the
+     diff, the issue and the check, and:
+     - the goal, and the real cases behind it, never your mechanism: a
+       verifier told how the change works checks the code against your
+       design, and a hole in the design passes;
+     - the rules the touched area must keep (what that code may never
+       log, delete, decide or call): a reviewer who is not told a rule
+       cannot see it broken;
+     - what on this machine will stop it: a shell guard that refuses some
+       commands, a lock other sessions share, what it must never touch.
+
+     The diff shows what the code does. Your account of why it is right
+     stays out.
    - **It is not one more agent.** Where a repository already asks for a
      fresh reviewer before a PR, that reviewer is the verifier, as long as
      it had none of your context, ran the check itself and ends with PASS
      or FAIL. A session that has no subagents, or was told to start none,
      asks another vendor's reviewer (for example `codex review`) to run
      the check, or uses a new session.
-   - **It runs something.** The check of step 1 on the branch, the changed
-     command, the tests of the change. Reading the diff is a review, not a
-     verdict. Where nothing can run without touching what is shared (most
+   - **It runs something of its own.** The check of step 1 on the branch
+     and the changed command; then what you did not do: it breaks the
+     change on purpose and sees a test fail, writes the cases your tests
+     leave out, and reads the diff cold. It does not spend its pass on
+     the tests you ran while you built the change: they passed. Reading
+     the diff alone is a review, not a verdict. Where nothing can run without
+     touching what is shared (most
      infrastructure, and a workflow whose jobs run only on CI's runners),
      it runs the dry run, the syntax check or the plan, and its verdict
      says that is all it ran. That is expected there, not a shortfall.
+   - **It works in a copy of its own** (a clone or a worktree it makes),
+     never in your worktree: it changes files to break them, and you and
+     the other reviewers read that tree meanwhile.
    - **It touches nothing shared:** no production, no deploy, no shared
      device, no live account. Those checks come after the merge, and the
      pre-PR verdict never stands in for them.
+   - **A rule or an automation is first run on real data, read-only:**
+     over the PRs, issues or rows it will act on, before its PR, by you,
+     with what it showed on the issue. No verifier sees what such a run
+     shows: which real cases it gets wrong.
    - It answers PASS or FAIL with what it ran and what it saw. On FAIL,
      fix and ask again; after two FAIL rounds, stop and rework the change
      as a whole before a third.
@@ -765,7 +801,9 @@ not its size in lines:
      PR: each costs tokens, the findings shrink to corner cases, and the
      PR's own reviewers will see the change once it is open. A finding that
      was shown is fixed; only one nobody could show, or a minor one, may be
-     left, and the PR body names it.
+     left, and the PR body names it. Renewing the line for a later commit
+     (the next point) is not another round: it is the same verifier on
+     what one fix changed, or your own re-run.
    - **A verdict belongs to one commit.** Whether a later push needs the
      line renewed is decided by the files it changes: a reader, and the
      bot that checks the line, can tell a prose file from a code file, not
@@ -777,15 +815,31 @@ not its size in lines:
        an agents file, wherever agents read it from): the line is renewed
        for the new commit.
 
-     Renewed means a new verdict on the new commit, with one exception.
-     When the push changed only comments that tell no tool anything, or
-     only generated files, nothing runs differently: the author names the
-     new commit on the line and says what changed since the verified one,
-     with no new run:
-     `Pre-PR verdict: PASS at <new short sha> (<who ran it>: <what was run> at <old short sha>; only comments changed since)`.
-     A comment that switches a check off or changes what a tool does (a
-     lint, coverage or type exemption, a shebang) is code, not a comment.
-     In a stack, each PR has its own verdict, on its own diff.
+     Renewed is the cheapest thing that is still true:
+     - **The push changed the code:** the same verifier, resumed, on what
+       changed since its PASS (the commits since, and what they can
+       break). Minutes, not a fresh pass; a fresh verifier only when the
+       first one is gone.
+     - **The push only added tests or tightened their assertions, changed
+       comments that tell no tool anything, or regenerated files nothing
+       runs:** nothing in the product runs differently and no proof got
+       weaker, so you renew it yourself. Run the repository's checks
+       again, name the new commit on the line and say what changed since
+       the verified one:
+       `Pre-PR verdict: PASS at <new short sha> (<who ran it>: <what was run> at <old short sha>; only tests added or tightened since, checks re-run)`.
+       Not this case, and the verifier's: a test removed, skipped or
+       loosened; a comment that switches a check off or changes what a
+       tool does (a lint, coverage or type exemption, a shebang); a test
+       helper the product imports; a lockfile or a migration, though a
+       tool wrote it.
+     - **The push changed text agents follow:** its cold reader, resumed,
+       on what changed.
+
+     This holds after the PR opens too: every fix push renews the line in
+     the PR body, in the same step as the push. A line left on an earlier
+     commit is stale, and where the repository's bot checks it, the PR
+     waits for it. In a stack, each PR has its own verdict, on its own
+     diff.
    - Post the verdict on the issue, and in the PR body on a line of its
      own: `Pre-PR verdict: PASS at <short sha> (<who ran it>: <what was run>)`.
      The word is "at", never `@`: GitHub turns `@` and a short sha into a
