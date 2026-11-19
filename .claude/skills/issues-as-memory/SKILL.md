@@ -494,7 +494,10 @@ Golzak Bot gives every open PR into the default branch at most one label:
   - CI is green;
   - every reviewer expected on it has passed:
     - **Codex** finished a review of the latest commit. After every fix push, comment `@codex review`, and again
-      once a usage limit resets.
+      once a usage limit resets. While Codex cannot review, a fresh reviewer on another Anthropic model that has
+      none of the change's context stands in, and says so on the PR (the laptop rules and the `babysit-pr`
+      skill, "When Codex cannot review"): a session the operator has authorized to merge its own PR goes by
+      that comment; the bot's label still waits for Codex itself.
     - **The pre-PR verdict** in the PR body stands for the latest commit, where the repository's bot checks it:
       renew the line with every fix push ("Prove the change", step 2).
     - **Claude's code review** (one round per PR) finished a run, and its threads are resolved. A run that
