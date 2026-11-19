@@ -24,8 +24,19 @@ and the ruleset where they are missing.
 - **Layout:** `qa/<issue>/<YYYYMMDD>-<check-slug>-before.<ext>` and
   `…-after.<ext>`; a single shot is `…-<check-slug>.<ext>`.
 - **Size:** at most 1080 px on the long side (`sips -Z 1080 <file>` on macOS,
-  or Pillow); a screen recording becomes a short GIF (at most about 5 MB).
-  Logs go in a text file or straight into the comment.
+  or Pillow). Logs go in a text file or straight into the comment.
+- **A recording becomes a GIF; a video is never uploaded.** A video is
+  heavy, and an image link to a video file on a branch shows nothing in
+  a comment. Record, cut to
+  the seconds that show the check, and convert (at most 360 px wide,
+  about 7 frames a second, at most about 5 MB):
+
+  ```bash
+  ffmpeg -ss <start> -t <seconds> -i <recording> \
+    -vf "fps=7,scale=360:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" <name>.gif
+  ```
+
+  Only the GIF goes on the branch; the recording stays local.
 - **Privacy, before anything is uploaded:** nothing may show an account or
   device ID, a token, a public IP, an e-mail address, or a person's name or
   photo. Blur or crop it (Pillow `GaussianBlur` on the box), or leave the
