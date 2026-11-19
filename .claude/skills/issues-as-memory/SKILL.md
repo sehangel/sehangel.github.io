@@ -873,11 +873,13 @@ not its size in lines:
    out. Post one comment whose first line is
    `Post-merge proof: PASS at <merge commit or deploy id>` (or `FAIL`; one
    word after "at", with no space in it),
-   followed by the before-and-after table, its cells filled as "Evidence,
-   QA and production tests" says for the kind of change (a screenshot, a
-   GIF, a fenced block of output: something a reader can open or read,
-   not a sentence that says it was checked). Where nothing live exists to
-   check, CI on the merge commit is the proof: say so on that line. Only
+   followed by the before-and-after table and what shows it, as
+   "Evidence, QA and production tests" says for the kind of change (a
+   screenshot or a GIF in the cells, or fenced blocks of output under the
+   table: something a reader can open or read, not a sentence that says
+   it was checked). Where nothing live exists to check, CI on the merge
+   commit is the proof: say so on that line, and paste under the table
+   the lines of that run that show it. Only
    then does the issue leave `status:qa`. A FAIL is a new `bug` issue,
    linked; the issue that carries the check stays open, or is reopened.
    The proof is owed where the check of step 1 was posted, once the work
@@ -1074,29 +1076,35 @@ repositories at once.
      One row per check; say what changed under the table when it isn't
      obvious from the two cells.
 
-  **Each cell holds something a reader can open or read, never a
+  **The comment shows something a reader can open or read, never only a
   sentence that says it was checked.** "Verified on the phone" or "the
   query returns the right rows" is a claim; the screenshot and the
-  query's result are the proof. What goes in the cells depends on the
-  change:
+  query's result are the proof. An image or a GIF is embedded in its
+  cell. Output cannot sit in a table cell (Markdown has no fenced block
+  there): the cell says in a few words what was seen, and the output
+  follows the table in fenced blocks headed **Before** and **After**. So
+  a proof is a table, and with it at least one image, GIF or fenced
+  block. A link to a CI run alone is not that: every merge has one;
+  paste the lines of the run that show the result. What shows each kind
+  of change:
 
-  | The change | What the Before and After cells hold |
+  | The change | What shows it, before and after |
   | --- | --- |
   | Something a user sees and that stands still (a screen, a sheet, a notice, text) | A screenshot of each, same device and same state (one per state that changed), embedded from the `qa-evidence` branch |
   | Something a user sees that moves or takes steps (an animation, a multi-step flow, a reconnect as the user sees it) | A short GIF of each, embedded from `qa-evidence`. A recording is converted to a GIF; a video file is never uploaded |
-  | App behaviour with nothing to see (background work, what the app sends, a timing, a size) | The log lines or the measured numbers from the device or emulator, in a fenced block |
+  | App behaviour with nothing to see (background work, what the app sends, a timing, a size) | The log lines or the measured numbers from the device or emulator, in a fenced block under the table |
   | A server or API change (a Worker, a service, a job) | The request or command and its answer, in a fenced block; for something that shows only over time, the count over the same window before and after the deploy, or the dashboard's graph as a screenshot |
   | Data (a migration, a query, a dashboard's table, analytics events arriving) | The query and its result as counts or aggregates, in a fenced block, or the panel before and after as a screenshot |
   | A setting outside the code (a flag, a variable, a DNS record) | The setting read back before and after, in a fenced block; never a secret's value |
   | A fleet change (scaling, load, a node image or role) | The simulator's or the test run's result table in a fenced block, and the live numbers once deployed |
   | A security fix | The same request before and after, with what each was answered; never a working exploit or a secret, least of all in a public repository |
-  | CI, a script, a tool, a dependency | The command and the lines of its output that show the behaviour, in a fenced block, or the run's link with those lines quoted |
+  | CI, a script, a tool, a dependency | The command and the lines of its output that show the behaviour, in a fenced block under the table; a run's link may go with them, never in their place |
   | A visual asset (an icon, a store image, a rendered page) | The rendered old and new |
   | Text-only docs | The diff is the before and after; link it, no screenshot needed, and no verifier or post-merge comment |
 
   A fenced block starts with the command, query or request that produced
-  what follows it, and each cell names the build, commit or deploy it was
-  taken on. "Before" comes from the code before the change: the parent
+  what follows it, and the table's Before and After headings name the
+  build, commit or deploy each was taken on. "Before" comes from the code before the change: the parent
   commit in a worktree of its own, the last released build, or, for what
   only production shows, the same query over the window before the
   deploy. Before the PR the cells may come from a local run; after the
