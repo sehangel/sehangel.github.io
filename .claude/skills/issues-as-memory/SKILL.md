@@ -849,7 +849,10 @@ not its size in lines:
      mention when an account has that name, and notifies a stranger.
      When the real check needs something shared, the line says what is
      still owed:
-     `Pre-PR verdict: PASS at 1a2b3c4 (sonnet: unit tests, build; phone check owed after merge)`.
+     `Pre-PR verdict: PASS at 1a2b3c4 (sonnet: unit tests, build; device check owed: the test device was taken)`.
+     A device check is run before the PR, on a local release build of the branch,
+     whenever the device can be had; it is owed after the merge only when
+     it could not.
      A change that needs none says `Pre-PR verdict: N/A (<why>)`, so
      "exempt" never looks like "forgot". A job that cannot give one (a
      bot's PR, an automated fix, a session with no subagents and no other
@@ -869,8 +872,30 @@ not its size in lines:
    issue that carries the check (the delivered issue where it stays open
    on `status:qa`, otherwise the follow-up or QA-queue issue the PR body
    names: Loop, step 5), run the check of step 1 on the merged build or
-   the deploy, now with the live, device or production checks step 2 left
-   out. Post one comment whose first line is
+   the deploy, now adding any live, device or production check step 2
+   could not run (the verdict line names it). **For an app, on every
+   platform it ships to (Android, iOS, desktop, web), "what shipped" is a
+   release build of the merge commit, built locally and installed on that
+   platform's test device** (a test phone taken through `phone-queue`,
+   the test computer or browser for desktop and web): build it as soon as
+   the PR merges, test it, and post the proof; never wait for a store
+   release. Build it the way the release pipeline does (the libraries and
+   flags it adds), signed with the repository's release signing config
+   (its untracked keystore, certificate or profile files linked into the
+   worktree); a build that fell back to debug signing is not a release
+   build. The repository's device-QA skill or Kanban profile says how.
+   Where a store build is already installed and the local build is signed
+   with another key, the swap may need an uninstall that wipes the app's
+   data: put the store build back before handing the device on. The
+   proof names the commit and the build number, and the issue leaves
+   `status:qa` on it. Only a check that a store-signed build alone can
+   run (a reinstall, clear-data or account restore tied to the store's
+   signing key, a store attestation such as Play Integrity or App
+   Attest, a sign-in tied to the store signing certificate, a store-only
+   purchase or update flow) waits for a store-signed build (an internal
+   or beta track such as Play internal testing or TestFlight is enough;
+   never a public release), on a follow-up issue of its own, so it never
+   holds this one. Post one comment whose first line is
    `Post-merge proof: PASS at <merge commit or deploy id>` (or `FAIL`; one
    word after "at", with no space in it),
    followed by the before-and-after table and what shows it, as
@@ -1063,7 +1088,8 @@ repositories at once.
      changes, the "before" is gone.
   2. **Run the same check after,** under the same conditions (same device,
      account, data, command, query window): on the branch for the pre-PR
-     verdict, then on the new build or deploy once it is merged.
+     verdict, then, once it is merged, on a build of the merge commit (for
+     an app, a local release build on the platform's test device: step 4) or the deploy.
   3. **Post both side by side** in one comment, naming the build, commit or
      deploy each was taken on:
 
@@ -1105,12 +1131,15 @@ repositories at once.
   A fenced block starts with the command, query or request that produced
   what follows it, and the table's Before and After headings name the
   build, commit or deploy each was taken on. "Before" comes from the code before the change: the parent
-  commit in a worktree of its own, the last released build, or, for what
+  commit in a worktree of its own (for an app, a local release
+  build of it, so both cells share a signing key), the last released
+  build when the parent can no longer be built, or, for what
   only production shows, the same query over the window before the
   deploy. Before the PR the cells may come from a local run; after the
   merge they are taken on what shipped ("Prove the change", step 4), and
   a change that touches startup, connect, auth, deploys or infrastructure
-  is not proven by a local run or a unit test (below).
+  is not proven by a unit test, an emulator or a debug run alone (below).
+  A local release build on the platform's real test device is a device check.
 
   What comes from real users is shown as counts and normalised
   signatures, never as rows, raw log lines, IDs, IPs or e-mail addresses;
@@ -1136,7 +1165,9 @@ repositories at once.
   area.
 - **Unit tests are not proof of a live fix.** Changes that touch startup,
   connect, auth, deploys or infrastructure get a live or device check before
-  their QA issue is `status:done`.
+  their QA issue is `status:done`. For an app on any platform, the device check is
+  a release build on a real test device, built locally by default:
+  it never waits for a store release ("Prove the change", step 4).
 
 ### Incidents
 
@@ -1283,7 +1314,7 @@ bug, feature and refactor then end with
 - [ ] Proven before the PR: a fresh verifier's PASS, with its commit
 - [ ] PR opened
 - [ ] Review findings settled, a mistake seen twice filed as a check
-- [ ] Proven after the merge: the same check passes on what shipped
+- [ ] Proven after the merge: the same check passes on what shipped (for an app, a local release build of the merge commit on each platform's test device)
 text agents follow
 - [ ] Text written
 - [ ] Cold read by a fresh reader, findings answered

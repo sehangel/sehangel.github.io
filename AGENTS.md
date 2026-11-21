@@ -38,7 +38,10 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
   did not write it runs it and gives PASS or FAIL; the PR body carries the
   `Pre-PR verdict:` line) and again after the merge, on what shipped (a
   `Post-merge proof:` comment), before the issue leaves `status:qa`: the
-  skill's "Prove the change".
+  skill's "Prove the change". For an app on any platform, what shipped
+  is a local release build of the merge commit on that platform's test
+  device: never wait for a store release to prove a change (only a check
+  that needs a store-signed build waits, on its own follow-up issue).
 - Labels and progress comments stay current as you build, test and ship.
   Don't start comments with the date (GitHub timestamps them); dates that
   are evidence (incident times, deadlines) are fine.
