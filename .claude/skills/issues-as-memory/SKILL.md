@@ -897,7 +897,10 @@ not its size in lines:
    never a public release), on a follow-up issue of its own, so it never
    holds this one. Post one comment whose first line is
    `Post-merge proof: PASS at <merge commit or deploy id>` (or `FAIL`; one
-   word after "at", with no space in it),
+   word after "at", with no space in it), as plain text: not a heading
+   (`## Post-merge proof: …`), not bold or code, and not after any other
+   line (the bot reads that first line alone and reopens an issue whose
+   proof it cannot read),
    followed by the before-and-after table and what shows it, as
    "Evidence, QA and production tests" says for the kind of change (a
    screenshot or a GIF in the cells, or fenced blocks of output under the
