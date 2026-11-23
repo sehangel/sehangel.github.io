@@ -355,6 +355,10 @@ by its labels:
 - **Ready to take**: `status:todo` work, unblocked, P0 first, then
   oldest. A to-do issue that names an Owner comes after the free ones,
   marked as held by that owner: ask on the issue before taking it;
+- **QA or docs to take**: `status:qa` and `status:docs` issues no session
+  owns and nothing blocks, P0 first, each with what it owes (its
+  post-merge proof, or its docs stage): the session that merged usually
+  ended at the merge, so this is how the proof gets done;
 - **In progress**: `status:in-progress`, with its owner;
 - the PRs waiting on their agent, review, QA or docs, what is blocked, and
   the backlog.
@@ -365,7 +369,8 @@ and the body says how many follow.
 A session that was given a task works that task first (resume it after a
 summary). The queue is where a session with no task of its own, or one that
 finished it, picks the next item: the top Ready item within what the
-operator authorized for the session. Being on the queue is no permission
+operator authorized for the session, or else the top QA or docs item to
+take. Being on the queue is no permission
 by itself: production-affecting or unrelated work still needs the
 operator's OK. `/claim` what you take. Never comment on the queue issue.
 
@@ -639,7 +644,13 @@ after a message to the owner.
      keeps the delivered issue open until it is verified (e.g. a crash fix
      that must be confirmed in the field), link it with `Refs #n` instead,
      move it to `status:qa` after the merge, and close it by hand with the
-     proof.
+     proof. **Where the profile says issues stay open through QA** (its
+     "Closing" section), that is every issue that still owes a post-merge
+     check: `Refs #n`, and `Closes #n` only with `QA: none` in the body. A
+     `Closes` merge there closes the issue, the bot reopens it on
+     `status:qa`, and the proof it asks for in a comment reaches no session
+     that has ended (sehangel/Vantom-VPN#3593: 176 reopens on 400 issues in
+     a week, 49 left waiting on nobody).
      If other issues are blocked by `#n` because of that check, move their
      "blocked by" link to the issue that carries the check, so closing `#n`
      doesn't unblock them early.
@@ -668,7 +679,13 @@ after a message to the owner.
      `gh pr view $PR -R $R --json body --jq .body | grep -oiE 'refs [a-z0-9/._-]*#[0-9]+'`.
      When you rewrite a PR body from a file, keep these lines.
 
-6. **After merge / deploy** (the same turn, before the next task): confirm
+6. **After merge / deploy** (the same turn, before the next task). **Post
+   the post-merge proof now whenever it can run now**, before you end the
+   turn: a change no user's phone or rare event must confirm is proven by
+   its own regression test run again on the merge commit (or `main`), plus
+   that commit being in what shipped (an ancestor of the deployed Worker's
+   commit, or of the release tag). Left for later, it waits on a session
+   that has ended. Then confirm
    the `Closes` issues closed and move them from `status:review` to
    `status:done` (GitHub doesn't change labels). Move issues that wait on
    verification to `status:qa` until verified, then `status:done` (or the

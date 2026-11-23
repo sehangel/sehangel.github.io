@@ -20,7 +20,9 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
   every merge.
 - PRs reference every issue they handle: `Closes #n` for each issue they
   deliver, `Refs #n` for epics and for work an operator or a later PR
-  finishes. Other repos' issues use the full `owner/repo#n` form.
+  finishes. Where the profile keeps issues open through QA, `Refs #n` for
+  every issue that still owes a post-merge check, and `Closes #n` only with
+  `QA: none`. Other repos' issues use the full `owner/repo#n` form.
 - Issues link natively: an issue blocked by another gets GitHub's "blocked
   by" link (the label bot sets and clears `blocked` from it), and an epic's
   children are its sub-issues.
