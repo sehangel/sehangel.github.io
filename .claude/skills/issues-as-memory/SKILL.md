@@ -681,8 +681,10 @@ after a message to the owner.
 
 6. **After merge / deploy** (the same turn, before the next task). **Post
    the post-merge proof now whenever it can run now**, before you end the
-   turn: a change no user's phone or rare event must confirm is proven by
-   its own regression test run again on the merge commit (or `main`), plus
+   turn: a change that no user's phone, live system or rare event must
+   confirm, and that touches no startup, connect, auth, deploy or
+   infrastructure path ("Unit tests are not proof of a live fix", below), is
+   proven by its own regression test run again on the merge commit (or `main`), plus
    that commit being in what shipped (an ancestor of the deployed Worker's
    commit, or of the release tag). Left for later, it waits on a session
    that has ended. Then confirm
