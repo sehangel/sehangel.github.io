@@ -5,8 +5,8 @@
 ## Work tracking (hard rule)
 
 GitHub Issues in this repository are the project memory and Kanban board.
-Follow the `issues-as-memory` skill (`.claude/skills/issues-as-memory/SKILL.md`,
-synced from `sehangel/claude-skills`) and this repository's Kanban profile
+Follow the `issues-as-memory` skill (laptop-wide at `~/.claude/skills/issues-as-memory/SKILL.md`;
+elsewhere read it from `sehangel/claude-skills`) and this repository's Kanban profile
 (`.claude/kanban-profile.md`), which holds what is specific to this repo.
 
 - Every operator request, bug report or decision is captured as an issue (or
@@ -14,7 +14,9 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
 - Every open issue has exactly one `status:*` label (`backlog`, `todo`,
   `in-progress`, `review`, `qa`, `done`, and any stage the profile adds;
   plus `blocked` with who unblocks it) and exactly one `priority:P0`-`P3`
-  label. Work is picked P0 first.
+  label. Work is picked P0 first. GitHub's native issue status shows the
+  same stage on its board (review, qa and docs as In review); move the
+  label, create issues with their status, and never claim by assignment.
 - Closing an issue moves its label too (GitHub never does): completed work
   ends on `status:done` (or the profile's next stage), checked right after
   every merge.
@@ -29,7 +31,8 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
 - Work the task you were given first; with none, pick from the repo's
   `ready-queue` issue (within what the operator authorized) and
   `/claim <session name>` it; `/release` when you stop. A PR labelled `waiting:author` is yours to
-  fix (conflicts included). Never comment `/merge`: only the operator does.
+  fix (conflicts included). Merge a PR only when the operator authorizes it
+  in chat; there is no `/merge` command, and the bot never merges.
 - Every issue is complete on its own: a Status block at the top of its body
   (stage, owner, next step, what is done, what was decided and why),
   rewritten at each step, one checklist in the body (a comment never
