@@ -1,6 +1,6 @@
 ---
 name: issues-as-memory
-description: Turn every operator request into a GitHub issue and track it on a Kanban (status:* + priority:P0-P3 labels, ordered by priority and dependencies) so work survives agent context loss. Use at the start of every session, after every context summary, when starting/finishing/blocking any task, when opening a PR, and before ending a turn. Triggers -- what's left, what's next, backlog, kanban, update the ticket, log this, track this, resume work.
+description: Turn every operator request into a GitHub issue and track it on a Kanban (status:* + priority:P0-P3 labels, shown by GitHub's native issue status and repository boards, ordered by priority and dependencies) so work survives agent context loss. Use at the start of every session, after every context summary, when starting/finishing/blocking any task, when opening a PR, and before ending a turn. Triggers -- what's left, what's next, backlog, kanban, update the ticket, log this, track this, resume work.
 ---
 
 <!--
@@ -98,6 +98,73 @@ for l in $(gh issue view $n -R $R --json labels --jq ".labels[].name | select(st
 done
 gh issue edit $n -R $R --add-label "$new"
 ```
+
+### GitHub's native status: the same stage, on GitHub's own board
+
+GitHub issues carry a native **status** (public preview since 2026-11-23):
+seven fixed values, the same in every repository. It is the stage as GitHub
+shows it: the issue header, the issue list's icon, `status:` search and a
+repository **board** grouped by status. The stage label stays the stage of
+record, the one Golzak Bot's rules, the ready queue, claims and QA read.
+The two say the same thing:
+
+| Stage label                                    | Native status          | State                  |
+| ---------------------------------------------- | ---------------------- | ---------------------- |
+| `status:backlog`                               | Backlog                | open                   |
+| `status:todo`                                  | Todo                   | open                   |
+| `status:in-progress`                           | In progress            | open                   |
+| `status:review`, `status:qa`, `status:docs`    | In review              | open                   |
+| `status:done`                                  | Done                   | closed as completed    |
+| no stage (closed as not planned / duplicate)   | Not planned, Duplicate | closed with that reason |
+
+GitHub has no QA or docs status, so those stages show as In review; the
+label tells them apart. Status and state are one thing: setting Done, Not
+planned or Duplicate closes the issue, and an open status on a closed issue
+reopens it.
+
+**What GitHub moves by itself** (seen live, sehangel/claude-skills#117):
+
+- a new issue starts on Backlog, whatever its labels, unless it is created
+  with a status;
+- a PR that says `Closes #n`: In progress while it is a draft, In review
+  once it is ready (or opened ready), back to In progress if it is closed
+  unmerged; its merge closes the issue, which sets Done. `Refs` moves
+  nothing;
+- assigning someone to a Backlog issue moves it to Todo (one further along
+  stays where it is);
+- **a reopen resets the status to Backlog**, whatever stage it had;
+- a drag between columns on a repository board sets the status.
+
+**Golzak Bot keeps them in step where its `nativeStatus` setting is on**
+(the profile says so; sehangel/golzak-bot#121): a status the repository
+owner's account sets (every agent and the operator post as it; a board drag
+included) adds the stage label it names; anyone else's is put back. Every label
+move sets the status (In review keeps `status:qa` and `status:docs`). So a
+board drag is a stage move, and a reopen gets its stage back. Where it is
+off, the label alone is the stage and the status may lag: never read the
+stage from the status there.
+
+**What you do:**
+
+- **Move the stage with the label**, as below. It works in every repository;
+  the bot moves the status. A board drag or a status set in the issue header
+  is fine too where `nativeStatus` is on, since it moves the label.
+- **Create an issue with its status as well as its labels**, so it lands on
+  the right column at once (`gh` has no status flag yet; the REST API takes
+  it by name: `new_issue` in "Commands").
+- **Never assign yourself to claim an issue**: every agent posts as one
+  account, and assignment means nothing more than "Todo" to GitHub. Claim
+  with `/claim` ("Owning an issue").
+- **Never open a draft PR** (laptop rule): the issue would sit on In progress
+  instead of In review.
+- **Read stages from the labels** in scripts. `status:"In progress"` in a
+  search, or the board, is a quick look for a person.
+- **A workflow on `issues` with no `types:` list now also runs on every
+  status change** (`status_changed`; GitHub's docs say it fires on creation,
+  close and reopen too, as each sets a status). Give every `on: issues:` trigger an explicit `types:` list.
+- **The board**: one saved view per repository, named `Kanban`, board
+  layout, grouped by status, with priority shown. Views are made in the web
+  UI (no API for them found yet): the operator's click.
 
 Move the stage label only when the issue crosses a stage boundary (started,
 PR opened, merged, verified), not after every commit. When `blocked` no longer
@@ -197,7 +264,9 @@ purpose, or moved to an open issue where some of them still matter.
 
 A close as not planned or as a duplicate takes the stage label off (Golzak
 Bot does it; without the bot, remove it yourself): no stage is true of work
-that won't be done. Reopening it gives it a stage again.
+that won't be done. Reopening it gives it a stage again. Close a duplicate
+with `gh issue close <n> -R $R --duplicate-of <m>`: GitHub records which
+issue it duplicates, and the status says Duplicate.
 
 A close, by a PR merge or by hand, leaves the issue on whatever stage label
 it had. This is the step agents forget most: audits found 40-50% of issues
@@ -509,7 +578,8 @@ Golzak Bot gives every open PR into the default branch at most one label:
       failed is re-run.
     - **The QA pass** (one round per PR, where the repo counts its verdicts) said SHIP. SHIP WITH EDITS or
       HOLD on the latest commit is yours to fix. SHIP WITH EDITS on an earlier commit, with your fixes pushed
-      since, passes. HOLD needs a new round (mark the PR draft, then ready).
+      since, passes. HOLD needs a new round (mark the PR draft, then ready; GitHub moves its
+      `Closes` issues to In progress meanwhile, and back to In review with the ready).
 
   The bot names the missing pass in its reasons.
 - **`/merge` is the operator's alone (hard rule).** Never type `/merge` in
@@ -1432,6 +1502,17 @@ reports to the operator) is structured and formatted, never a wall of prose:
 ```bash
 R=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh issue create -R $R --title "..." --label "status:todo,priority:P2" --body "..."
+# the same, landing on the board's Todo column at once (status by name: Backlog, Todo, In progress, In review)
+new_issue() {  # new_issue "<title>" <body-file> <status:label> <priority:label> ["<Status>"]
+  local st="${5:-}"
+  [ -n "$st" ] || case "$3" in status:backlog) st=Backlog;; status:todo) st=Todo;;
+    status:in-progress) st="In progress";; status:review|status:qa|status:docs) st="In review";;
+    *) echo "new_issue: $3 is not an open stage label" >&2; return 1;; esac
+  gh api "repos/$R/issues" -f title="$1" -F body=@"$2" -f "labels[]=$3" -f "labels[]=$4" \
+    -f status="$st" --jq .html_url
+}
+gh issue list -R $R --state open --search 'status:"In progress"'   # a quick look by native status
+gh api "repos/$R/issues/18" --jq '.status.name'                     # one issue's native status
 gh issue list -R $R --state open --label priority:P0 --limit 1000   # anything urgent?
 gh issue comment 18 -R $R --body "Deployed abc123; /healthz 200. Next: ..."
 close_done 18 "Verified: ..."     # completed: label + close (see "Labels")
@@ -1443,6 +1524,13 @@ gh issue list -R $R --state open --limit 1000 --json number,labels --jq \
 # closed drift: closed as completed, not on status:done (recent 300 closes)
 gh issue list -R $R --state closed --limit 300 --json number,stateReason,labels --jq \
   '.[] | select(.stateReason == "COMPLETED" and ([.labels[].name] | index("status:done") | not)) | .number'
+# status drift: open issues whose native status is not their label's (where the bot's nativeStatus is on, it fixes these;
+# "no status" is an issue older than the preview, which the bot's sweep fills in)
+gh api --paginate "repos/$R/issues?state=open&per_page=100" --jq '.[] | select(.pull_request | not)
+  | ([.labels[].name | select(startswith("status:"))] | if length == 1 then .[0] else null end) as $l
+  | ({"status:backlog":"Backlog","status:todo":"Todo","status:in-progress":"In progress","status:review":"In review",
+      "status:qa":"In review","status:docs":"In review"}[$l // ""]) as $want
+  | select($want and $want != .status.name) | "#\(.number) \($l) shows \(.status.name // "no status")"'
 # open status:review issues: check each still has an open PR
 gh issue list -R $R --state open --label status:review --limit 1000 --json number --jq '.[].number'
 ```

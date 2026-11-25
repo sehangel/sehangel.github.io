@@ -14,7 +14,9 @@ synced from `sehangel/claude-skills`) and this repository's Kanban profile
 - Every open issue has exactly one `status:*` label (`backlog`, `todo`,
   `in-progress`, `review`, `qa`, `done`, and any stage the profile adds;
   plus `blocked` with who unblocks it) and exactly one `priority:P0`-`P3`
-  label. Work is picked P0 first.
+  label. Work is picked P0 first. GitHub's native issue status shows the
+  same stage on its board (review, qa and docs as In review); move the
+  label, create issues with their status, and never claim by assignment.
 - Closing an issue moves its label too (GitHub never does): completed work
   ends on `status:done` (or the profile's next stage), checked right after
   every merge.
