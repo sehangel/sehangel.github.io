@@ -3,7 +3,7 @@ name: qa-evidence
 description: Post before-and-after proof (screenshots, GIFs, log excerpts) for an issue or PR, in any repository - upload it to the repository's add-only `qa-evidence` branch and embed it in the issue comment. Use whenever a QA check, a bug repro, a fix or a device test needs proof on GitHub. Covers the file layout, the add-only upload (contents API or a detached worktree), privacy (blur IDs, e-mails, IPs, names), sizes, and the link format. Triggers -- QA evidence, screenshot proof, before and after, attach a screenshot, post evidence, qa-evidence branch, embed image in issue.
 ---
 
-<!-- synced from sehangel/claude-skills (issues-as-memory/sync/opt-in/qa-evidence/SKILL.md) -- edit there, not here -->
+<!-- synced from sehangel/skills (issues-as-memory/sync/opt-in/qa-evidence/SKILL.md) -- edit there, not here -->
 
 # QA evidence: before-and-after proof on the `qa-evidence` branch
 
@@ -16,7 +16,7 @@ The branch is **add-only**: every issue's images live on it, so a commit
 that drops or changes files breaks all of them (once, two hand-built
 commits replaced the tree with two files and 938 images went 404). A
 ruleset, `qa-evidence-add-only`, blocks force pushes and deleting the
-branch. The sync (sehangel/claude-skills) creates the branch, its README
+branch. The sync (sehangel/skills) creates the branch, its README
 and the ruleset where they are missing.
 
 ## 1. Make the files
