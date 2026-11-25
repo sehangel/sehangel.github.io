@@ -1,30 +1,33 @@
 # AGENTS.md
 
-<!-- kanban-sync:begin (synced from sehangel/claude-skills -- edit there, not here) -->
+<!-- kanban-sync:begin (synced from sehangel/skills -- edit there, not here) -->
 
 ## Work tracking (hard rule)
 
 GitHub Issues in this repository are the project memory and Kanban board.
 Follow the `issues-as-memory` skill (laptop-wide at `~/.claude/skills/issues-as-memory/SKILL.md`;
-elsewhere read it from `sehangel/claude-skills`) and this repository's Kanban profile
+elsewhere read it from `sehangel/skills`) and this repository's Kanban profile
 (`.claude/kanban-profile.md`), which holds what is specific to this repo.
 
 - Every operator request, bug report or decision is captured as an issue (or
   a comment on the matching one) in the same turn.
-- Every open issue has exactly one `status:*` label (`backlog`, `todo`,
-  `in-progress`, `review`, `qa`, `done`, and any stage the profile adds;
-  plus `blocked` with who unblocks it) and exactly one `priority:P0`-`P3`
-  label. Work is picked P0 first. GitHub's native issue status shows the
-  same stage on its board (review, qa and docs as In review); move the
-  label, create issues with their status, and never claim by assignment.
-- Closing an issue moves its label too (GitHub never does): completed work
-  ends on `status:done` (or the profile's next stage), checked right after
-  every merge.
-- PRs reference every issue they handle: `Closes #n` for each issue they
-  deliver, `Refs #n` for epics and for work an operator or a later PR
-  finishes. Where the profile keeps issues open through QA, `Refs #n` for
-  every issue that still owes a post-merge check, and `Closes #n` only with
-  `QA: none`. Other repos' issues use the full `owner/repo#n` form.
+- An issue's stage is GitHub's native issue status (Backlog, Todo, In
+  progress, In review; Done is a close as completed). GitHub moves a new
+  issue and a `Closes` PR's issue itself, and agents never set those; what
+  agents set is the skill's list ("Setting the stage"). QA and docs, which have no status, are the labels
+  `status:qa` and `status:docs` on an issue In review. The old `status:*`
+  stage labels are retired: never set them by hand. Every open issue has
+  exactly one `priority:P0`-`P3` label, plus `blocked` with who unblocks it.
+  Work is picked P0 first. Never claim by assignment.
+- Completed work is closed as completed (the close sets Done) with no QA or
+  docs label left and nothing unticked, or moved to the profile's next
+  stage; checked right after every merge.
+- PRs reference every issue they handle. An issue closes only after its
+  proof, never because a PR merged: `Refs #n` for every issue that still owes
+  a check (QA, docs, a post-merge proof), for epics and for work an operator
+  or a later PR finishes; `Closes #n` only with a line `QA: none — <why>`
+  (Golzak Bot reopens a `Closes` without it on `status:qa` where its
+  `qaOwedReopen` is on). Other repos' issues use the full `owner/repo#n` form.
 - Issues link natively: an issue blocked by another gets GitHub's "blocked
   by" link (the label bot sets and clears `blocked` from it), and an epic's
   children are its sub-issues.
