@@ -59,9 +59,6 @@ elsewhere read it from `sehangel/skills`) and this repository's Kanban profile
   yourself, or record on the issue why it can't move; don't spawn sub-agents
   just to clear the board. An open issue alone is not permission to start
   unrelated or production-affecting work.
-- No GitHub access in the session (a read-only review or `@claude` job, no
-  login)? Do the work, skip the issue steps you can't run, and list the
-  updates you couldn't make in the PR or final message.
 - Rules in this file, the profile or a repo SOP may be stricter than the
   skill, never looser. Never put secrets or personal data in an issue.
 
